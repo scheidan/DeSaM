@@ -82,8 +82,8 @@ end
 
 
 
-## ## ---------------------------------
-## ## function to update tanks
+## ---------------------------------
+## function to update tanks
 
 function update(tank::Tank)
 
@@ -114,5 +114,22 @@ function update(tank::Tank)
 
 end
 
+## ---------------------------------
+## function to show() a Tank object
 
+function show(tank::Tank)
+    println("---")
+    println("V_max: ", tank.V_max)
+    if(tank.has_parents)
+        println("parent tanks: ", size(tank.parents,1))
+        println("Collection function: ", tank.collection, "()")
+    else
+       println("no parent tank")
+    end
+    println("Source function: ", tank.source, "()")
+    println("\n")
+end
+
+
+    
 ## ---------------------------------
