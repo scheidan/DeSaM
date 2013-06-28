@@ -53,7 +53,7 @@ end
 
 ## outer constructor for Tank if collection and parents exist
 function Tank(V_max::Float64,
-              parents::Vector{Tank},
+              parents::Vector,
               collection::Function
               )
     tank = Tank(V_max)
@@ -65,7 +65,7 @@ end
 
 ## outer constructor for Tank if collection, source and parents exist
 function Tank(V_max::Float64,
-              parents::Vector{Tank},
+              parents::Vector,
               collection::Function,
               source::Function
               )

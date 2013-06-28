@@ -21,22 +21,23 @@ collection_coll_tank = def_ordered_collection(100.0) # ordered collection tour w
 ## ---------------------------------
 ## define function for sources generation
 
-source_house = def_household_source(10)              # househol produces max 10L per day
-
+## max 10 people, 1.5 liter/day/person median
+source_house = def_household_source(10, 1.5) # use the same function repeatedly
 
 ## ---------------------------------
 ## define tanks
 
 ## toilet tanks
-tank_toilet_A = Tank(10.0, source_house)
-tank_toilet_B = Tank(5.0, source_house)
-show(tank_toilet_A)
-show(tank_toilet_B)
+toilet_tanks_A = [Tank(10.0, source_house) for i=1:50] # use the same source function each time
+show(toilet_tanks_A[1])
+
+toilet_tanks_B = [Tank(5.0, def_household_source(10, 1.5)) for i=1:100] # create each time a NEW source function
+show(toilet_tanks_B[1])
 
 
 ## collection tanks
-tank_coll_1 = Tank(300.0, Tank[tank_toilet_A for i=1:50], collection_toilets)
-tank_coll_2 = Tank(300.0, Tank[tank_toilet_B for i=1:100], collection_toilets)
+tank_coll_1 = Tank(300.0, toilet_tanks_A, collection_toilets)
+tank_coll_2 = Tank(300.0, toilet_tanks_B, collection_toilets)
 show(tank_coll_1)
 show(tank_coll_2)
 
@@ -72,9 +73,20 @@ end
 
 
 ## print stored results
-println(mean(Volumes_tank_houshold_A1))
-println(mean(Volumes_tank_coll_1))
-println(mean(Volumes_tank_final))
+
+println(toilet_tanks_B[1].source(10))
+println(toilet_tanks_B[2].source(10))
+println(toilet_tanks_B[3].source(10))
+println(toilet_tanks_B[4].source(10))
+
+println(toilet_tanks_A[1].source(10))
+println(toilet_tanks_A[2].source(10))
+println(toilet_tanks_A[3].source(10))
+println(toilet_tanks_A[4].source(10))
+
+## println(mean(Volumes_tank_houshold_A1))
+## println(mean(Volumes_tank_coll_1))
+## println(mean(Volumes_tank_final))
 
 
 ## writecsv("output.csv", [[1:t_sim_max] Volumes_tank_houshold_A1 Volumes_tank_coll_1 Volumes_tank_final])

@@ -15,13 +15,21 @@
 
 ## ---------------------------------
 ## Function to create a source function
+##
+## !!! use package "Distributions" for more options !!!
 
-## Vmax: maximal volume per day
-function def_household_source(Vmax)
+function def_household_source(n_pers_max::Int, median_V_per_person)
+
+    ## sample number of persons
+    n_person = rand(1:n_pers_max)
+
+    ## sample global f_to_toilet
+    f_to_toilet = rand()
 
     function houdehold_source(time)
-        V_in = rand()*Vmax
-        return(V_in)
+        V_tot = sum(median_V_per_person*exp(randn(n_person))) # lognormal
+        V_in_tank = V_tot * f_to_toilet * (rand()/2.5+0.8) # f_to_toilet changes between [0.8, 1.2]
+        return(V_in_tank)
     end
 
     return(houdehold_source)
