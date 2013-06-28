@@ -1,100 +1,65 @@
 ##
 ## Run DESAM 2.0
 ##
-## June 27, 2013 -- Andreas Scheidegger
+## June 28, 2013 -- Andreas Scheidegger
 ## -------------------------------------------------------
-
 
 include("tank.jl")
-
+include("collections.jl")
+include("sources.jl")
 
 ## -------------------------------------------------------
-## Define tanks, collection and source function
+## 1) Define tanks, collection and source function
 ## -------------------------------------------------------
 
+## ---------------------------------
+## define function for tank collection
+
+collection_toilets = def_random_collection(200.0) # random collection tour with max 200L per tour day
+collection_coll_tank = def_ordered_collection(100.0) # ordered collection tour with max 100L per tour day
 
 ## ---------------------------------
-## function for tank collection
+## define function for sources generation
 
-function collection_toilets(tanks::Vector{Tank}, time)
-
-    ## maximal collected volume
-    V_coll_max= 250
-    
-    V_coll = 0.0
-    ## tanks are emptied at the end of the day!
-    ## empties tank alway in the same order
-    for i in 1:size(tanks,1)
-        V_tank_out = min(tanks[i].V, V_coll_max - V_coll)
-        tanks[i].V -= V_tank_out
-        V_coll += V_tank_out
-    end
-    
-    return(V_coll)
-end
-
-
-function collection_coll_tank(tanks::Vector{Tank}, time)
-
-    ## maximal collected volume
-    V_coll_max = 100
-    
-    V_coll = 0.0
-    ## tanks are emptied at the end of the day!
-    ## empties tank alway in the same order
-    for i in 1:size(tanks,1)
-        V_tank_out = min(tanks[i].V, V_coll_max - V_coll)
-        tanks[i].V -= V_tank_out
-        V_coll += V_tank_out
-    end
-    
-    return(V_coll)
-end
+source_house = def_household_source(10)              # househol produces max 10L per day
 
 
 ## ---------------------------------
-## function for sources
+## define tanks
 
-function source_A(time)
-    V_in = rand()*10
-    return(V_in)
-end
-
-
-
-## ---------------------------------
-
-## define toilet tanks
-tank_toilet_A = Tank(10.0, source_A)
-
-tank_toilet_B = Tank(5.0, source_A)
+## toilet tanks
+tank_toilet_A = Tank(10.0, source_house)
+tank_toilet_B = Tank(5.0, source_house)
 show(tank_toilet_A)
+show(tank_toilet_B)
 
 
-## define collection tanks
-tank_coll_1 = Tank(3000.0, Tank[tank_toilet_A for i=1:50], collection_toilets)
-tank_coll_2 = Tank(3000.0, Tank[tank_toilet_B for i=1:100], collection_toilets)
+## collection tanks
+tank_coll_1 = Tank(300.0, Tank[tank_toilet_A for i=1:50], collection_toilets)
+tank_coll_2 = Tank(300.0, Tank[tank_toilet_B for i=1:100], collection_toilets)
 show(tank_coll_1)
+show(tank_coll_2)
 
 
-## define finale tank
-tank_final = Tank(500.0, [tank_coll_1, tank_coll_2], collection_coll_tank)
+## finale tank
+tank_final = Tank(5000.0, [tank_coll_1, tank_coll_2], collection_coll_tank)
 show(tank_final)
 
 
 
 ## -------------------------------------------------------
-## run simulation
+## 2) run simulation
 ## -------------------------------------------------------
-
-## simulation time
-t_sim_max = 104
 
 ## define empty vectors to save results
 Volumes_tank_houshold_A1 = Float64[]
 Volumes_tank_coll_1 = Float64[]
+Volumes_tank_final = Float64[]
 
-for x in 1:t_sim_max
+## simulation time
+t_sim_max = 365*1
+
+for t in 1:t_sim_max
 
     ## update final tank
     update(tank_final)
@@ -102,22 +67,19 @@ for x in 1:t_sim_max
     ## write results
     push!(Volumes_tank_houshold_A1, tank_final.parents[1].parents[1].V)
     push!(Volumes_tank_coll_1, tank_final.parents[1].V)
-        
-    ## if x>100
-    ##     println("--- ", x, " updates")
-    ##     println("V householdtank[1]: ", round(tank_final.parents[1].parents[1].V,2))
-    ##     println("overflow of householdtank[1]: ", round(tank_final.parents[1].parents[1].V_overflow,2))
-    ##     println("V householdtank[2]: ", round(tank_final.parents[1].parents[2].V,2))
-    ##     println("overflow of householdtank[2]: ", round(tank_final.parents[1].parents[2].V_overflow,2))
-        
-    ##     println("V of tank_final: ", round(tank_final.V,2))
-    ##     println("overflow of tank_final: ", round(tank_final.V_overflow,2))
-
-        
-    ## end
+    push!(Volumes_tank_final, tank_final.V)
 end
 
+
 ## print stored results
-println(Volumes_tank_houshold_A1)
-println(Volumes_tank_coll_1)
+println(mean(Volumes_tank_houshold_A1))
+println(mean(Volumes_tank_coll_1))
+println(mean(Volumes_tank_final))
+
+
+## writecsv("output.csv", [[1:t_sim_max] Volumes_tank_houshold_A1 Volumes_tank_coll_1 Volumes_tank_final])
+println(" -- Done! -- ")
+
+
+
 
