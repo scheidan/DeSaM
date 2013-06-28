@@ -119,6 +119,7 @@ function update(tank::Tank)
 end
 
 
+
 ## ---------------------------------
 ## function to show() a Tank object
 
@@ -132,6 +133,7 @@ function show(tank::Tank)
        println("no parent tank")
     end
     println("Source function: ", tank.source, "()")
+    println("Simulation time [days]: ", tank.time)
     println("\n")
 end
 
