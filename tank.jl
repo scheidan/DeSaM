@@ -6,10 +6,12 @@
 ## File: tank.jl
 ## Path: c:/Users/scheidan/Dropbox/Eawag/JuliaTest/
 ##
-## June 27, 2013 -- Andreas Scheidegger
+## July  8, 2013 -- Andreas Scheidegger
 ##
 ## andreas.scheidegger@eawag.ch
 ## =======================================================
+
+
 ## ---------------------------------
 ## define type Tank
 
@@ -119,7 +121,6 @@ function update(tank::Tank)
 end
 
 
-
 ## ---------------------------------
 ## function to show() a Tank object
 
@@ -137,6 +138,55 @@ function show(tank::Tank)
     println("\n")
 end
 
+
+## ---------------------------------
+## return an array of all tanks of one 'level'
+
+function get_parent_tanks(tank::Tank, level::Int)
+
+    level>=0 ? 0 : error("A negative 'level' is not allowed!")
+
+    tanks_return = Tank[]
+    for i in 1:size(tank.parents,1)
+        if level==0
+            tanks_return = [tanks_return, tank.parents[i]]
+        else
+            if tank.parents[i].has_parents
+                tanks_return = [tanks_return, get_parent_tanks(tank.parents[i], level-1)]
+            end
+        end
+    end
+
+    return(tanks_return)
+end
+
+
+## ---------------------------------
+## return all 'field's of an array of Tank objects
+## !! argument 'field' must be type 'Symbol', i.e. get_field_of_tanks(tanks, :V_max)
+
+function get_field_of_tanks(tanks::Vector{Tank}, field::Symbol)
+
+    fields_return = []
+    for i in 1:size(tanks,1)
+        fields_return = [fields_return, getfield(tanks[i], field)]
+    end
+
+    return(fields_return)
+end
+
+## ---------------------------------
+## Returns all 'field's of the 'level' parents of 'tank'
+## !! argument 'field' must be type 'Symbol', i.e. get_field_of_tanks(tanks, :V_max)
+## Just a wrapper for get_field_of_tanks(get_parent_tanks(tanks, level), :field)
+
+function get_field_of_parent_tanks(tank::Tank, level::Int, field::Symbol)
+
+    level>=0 ? nothing : error("A negative 'level' is not allowed!")
+
+    get_field_of_tanks(get_parent_tanks(tank, level), field)
+
+end
 
 
 ## ---------------------------------
