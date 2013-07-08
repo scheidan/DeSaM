@@ -149,10 +149,10 @@ function get_parent_tanks(tank::Tank, level::Int)
     tanks_return = Tank[]
     for i in 1:size(tank.parents,1)
         if level==0
-            tanks_return = [tanks_return, tank.parents[i]]
+            push!(tanks_return, tank.parents[i])
         else
             if tank.parents[i].has_parents
-                tanks_return = [tanks_return, get_parent_tanks(tank.parents[i], level-1)]
+                append!(tanks_return, get_parent_tanks(tank.parents[i], level-1))
             end
         end
     end
@@ -167,9 +167,12 @@ end
 
 function get_field_of_tanks(tanks::Vector{Tank}, field::Symbol)
 
-    fields_return = []
+    ## find type of field and initialize an empty array
+    type_of_field = typeof(getfield(tanks[1], field))
+    @eval fields_return = $type_of_field[]
+
     for i in 1:size(tanks,1)
-        fields_return = [fields_return, getfield(tanks[i], field)]
+        push!(fields_return, getfield(tanks[i], field))
     end
 
     return(fields_return)

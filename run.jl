@@ -9,7 +9,8 @@
 ## TODO
 ##
 ## - use "Distributions" for source functions
-## - get_field_of_parent_tanks() is VERY slow!
+## - get_field_of_parent_tanks() is still relatively slow! (
+##    get_field_of_tanks() seems to be the bottle neck
 ## - pack everything in a module?
 ##
 ## ---------------------------------
@@ -89,8 +90,8 @@ function simulate(t_sim_max)    ## simulation time
             ## write results
             push!(Volumes_tank_final, tank_final.V) # Volume of in final tank
             ## sum of all household overflows
-          #  V_overflow = sum(get_field_of_parent_tanks(tank_final, 1, :V_overflow))
-           # push!(Volumes_overflow_households, V_overflow) # Volume of in final tank
+            V_overflow = sum(get_field_of_parent_tanks(tank_final, 1, :V_overflow)) # bottle neck!
+            push!(Volumes_overflow_households, V_overflow) # Volume of in final tank
 
         end
     end
@@ -101,7 +102,7 @@ end
 
 
 ## run simuation for two years
-@time results = simulate(365*2);
+@time results = simulate(365*10);
 
 
 ## print stored results
@@ -114,3 +115,4 @@ println(mean(results[2]))
 ## writecsv("output.csv", [[1:t_sim_max] Volumes_tank_houshold_A1 Volumes_tank_coll_1 Volumes_tank_final])
 
 ## -------------------------------------------------------
+
