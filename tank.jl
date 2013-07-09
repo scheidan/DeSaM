@@ -6,7 +6,7 @@
 ## File: tank.jl
 ## Path: c:/Users/scheidan/Dropbox/Eawag/JuliaTest/
 ##
-## July  8, 2013 -- Andreas Scheidegger
+## July  9, 2013 -- Andreas Scheidegger
 ##
 ## andreas.scheidegger@eawag.ch
 ## =======================================================
@@ -23,7 +23,7 @@ type Tank
     ## State variables
     V::Float64
     V_overflow::Float64
-    time
+    time::Int
 
     ## function for sources
     source::Function
@@ -39,12 +39,11 @@ type Tank
     ## construct incomplete Tank object WITHOUT parents
     function Tank(V_max::Float64)
         ## default values
-        V=0
-        time=0
-        V_overflow=0
-        no_sources(time) = 0
-        no_collection(tanks::Vector{Tank}, time) = 0
+        V = 0.0
+        V_overflow = 0.0
         time = 0
+        no_sources(time) = 0.0
+        no_collection(tanks::Vector{Tank}, time) = 0.0
         has_parents = false
         ## create instance
         new(V_max, V, V_overflow, time, no_sources, no_collection, has_parents)
@@ -140,7 +139,7 @@ end
 
 
 ## ---------------------------------
-## return an array of all tanks of one 'level'
+## return an array of all parent tanks at the same 'level'
 
 function get_parent_tanks(tank::Tank, level::Int)
 

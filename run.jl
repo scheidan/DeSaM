@@ -33,7 +33,7 @@ srand(111)
 ## define function for sources generation:
 source_house = def_household_source(10, 1.5) ## max 10 people, 1.5 liter/day/person median
 
-toilet_tanks_A = [Tank(10.0, source_house) for i=1:100] # uses the *identical* source function each time
+toilet_tanks_A = [Tank(11.0, source_house) for i=1:100] # uses the *identical* source function each time
 show(toilet_tanks_A[1])
 
 
@@ -90,8 +90,8 @@ function simulate(t_sim_max)    ## simulation time
             ## write results
             push!(Volumes_tank_final, tank_final.V) # Volume of in final tank
             ## sum of all household overflows
-            V_overflow = sum(get_field_of_parent_tanks(tank_final, 1, :V_overflow)) # bottle neck!
-            push!(Volumes_overflow_households, V_overflow) # Volume of in final tank
+            V_overflow = sum(get_field_of_parent_tanks(tank_final, 1, :V_overflow)) 
+            push!(Volumes_overflow_households, V_overflow) # sum of overflow of household tanks
 
         end
     end
