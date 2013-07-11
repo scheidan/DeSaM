@@ -8,9 +8,7 @@
 ## ---------------------------------
 ## TODO
 ##
-## - use "Distributions" for source functions
-## - get_field_of_parent_tanks() is still relatively slow! (
-##    get_field_of_tanks() seems to be the bottle neck
+## - source function are relatively slow
 ## - pack everything in a module?
 ##
 ## ---------------------------------
@@ -111,8 +109,9 @@ println(mean(results[2]))
 
 
 
-## --- write results to file ---
-## writecsv("output.csv", [[1:t_sim_max] Volumes_tank_houshold_A1 Volumes_tank_coll_1 Volumes_tank_final])
+## ## --- write results to file ---
+## ## writecsv("output.csv", [[1:t_sim_max] Volumes_tank_houshold_A1 Volumes_tank_coll_1 Volumes_tank_final])
 
-## -------------------------------------------------------
+## ## -------------------------------------------------------
+
 
