@@ -12,7 +12,7 @@
 ## =======================================================
 
 ## should not be necessary if packages are installed properly:
-include(joinpath("Distributions", "Distributions.jl"))
+##include(joinpath("Distributions", "Distributions.jl"))
 
 using Distributions
 
@@ -32,17 +32,21 @@ function def_household_source(n_pers_max::Int, median_V_per_person)
     meanlog = log(median_V_per_person)
     sdlog = 1.5
     d_logNorm = logNormal(meanlog, sdlog)
-    
+
     function houdehold_source(time)
         ## produced volume of all household members
         V_tot = sum( rand(d_logNorm, n_person) ) # lognormal
-                
+
         ## daily f_to_toilet changes between +-20%
         f_to_toilet_day = f_to_toilet * (rand()/2.5+0.8)
 
         ## Volume in tank
         V_in_tank = V_tot * f_to_toilet_day
-        return(V_in_tank)
+
+        ## costs
+        costs = 0.0
+
+        return(V_in_tank, costs)
     end
 
     return(houdehold_source)
@@ -52,7 +56,7 @@ end
 ## ---------------------------------
 ## Function to create a source function
 ##
-## uses onle Base functions
+## uses only Base functions
 
 ## function def_household_source(n_pers_max::Int, median_V_per_person)
 
@@ -65,9 +69,10 @@ end
 ##     function houdehold_source(time)
 ##         V_tot = sum(median_V_per_person*exp(randn(n_person))) # lognormal
 ##         V_in_tank = V_tot * f_to_toilet * (rand()/2.5+0.8) # f_to_toilet changes between [0.8, 1.2]
-##         return(V_in_tank)
+##         costs = 0.0
+##         return(V_in_tank, costs)
 ##     end
 
-##     ## println( "!! function is generated randomly, repeat for each tank !!")
+##
 ##     return(houdehold_source)
 ## end

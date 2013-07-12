@@ -34,7 +34,10 @@ function def_random_collection(n_tanks_max::Int, # max number of tanks per day
             end
         end
 
-        return(V_coll)
+        ## costs
+        costs = 1.0
+
+        return(V_coll, costs)
     end
 
     return(random_collection)
@@ -61,8 +64,12 @@ function def_ordered_collection(n_tanks_max::Int, # max number of tanks per day
             end
         end
 
-        return(V_coll)
+        ## costs
+        costs = 2.0
+
+        return(V_coll, costs)
     end
+
 
     return(ordered_collection)
 end
