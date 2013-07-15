@@ -16,9 +16,9 @@
 ## Function to create a collection function for tank collection
 ## - tanks are emptied in random order -
 
-function def_random_collection(n_tanks_max::Int, # max number of tanks per day
-                               V_coll_max::Float64, # max. volume per day
-                               work_days::Int)      # tour is every 'work_days'-th days
+function def_random_collection(n_tanks_max::Integer, # max number of tanks per day
+                               V_coll_max::Real, # max. volume per day
+                               work_days::Integer)      # tour is every 'work_days'-th days
 
 
     function random_collection(tanks::Vector{Tank}, time)
@@ -48,9 +48,9 @@ end
 ## Function to create a collection function for tank collection
 ## - tanks are emptied in same order -
 
-function def_ordered_collection(n_tanks_max::Int, # max number of tanks per day
-                                V_coll_max::Float64, # max. volume per day
-                                work_days::Int)      # tour is every 'work_days'-th days
+function def_ordered_collection(n_tanks_max::Integer, # max number of tanks per day
+                                V_coll_max::Real, # max. volume per day
+                                work_days::Integer)      # tour is every 'work_days'-th days
 
     function ordered_collection(tanks::Vector{Tank}, time)
 

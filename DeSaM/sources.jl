@@ -6,7 +6,7 @@
 ## File: sources.jl
 ## Path: /Users/ich/Dropbox/Eawag/Desam2/
 ##
-## June 28, 2013 -- Andreas Scheidegger
+## July 15, 2013 -- Andreas Scheidegger
 ##
 ## andreas.scheidegger@eawag.ch
 ## =======================================================
@@ -20,7 +20,7 @@ using Distributions
 ## Function to create a source function
 ## based on package "Distributions"
 
-function def_household_source(n_pers_max::Int, median_V_per_person)
+function def_household_source(n_pers_max::Integer, median_V_per_person::Real)
 
     ## sample number of persons
     n_person = rand(1:n_pers_max)
@@ -58,7 +58,7 @@ end
 ##
 ## uses only Base functions
 
-## function def_household_source(n_pers_max::Int, median_V_per_person)
+## function def_household_source(n_pers_max::Integer, median_V_per_person)
 
 ##     ## sample number of persons
 ##     n_person = rand(1:n_pers_max)

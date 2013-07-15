@@ -40,7 +40,7 @@ type Tank
 
 
     ## construct incomplete Tank object WITHOUT parents
-    function Tank(V_max::Float64)
+    function Tank(V_max::Real)
         ## default values
         V = 0.0
         V_overflow = 0.0
@@ -57,10 +57,10 @@ end
 
 
 ## outer constructor for Tank if collection and parents exist
-function Tank(V_max::Float64,
+function Tank(V_max::Real,
               parents::Vector,
               collection::Function,
-              costs::Float64             # initial costs
+              costs::Real             # initial costs
               )
     tank = Tank(V_max)
     tank.has_parents = true
@@ -71,11 +71,11 @@ function Tank(V_max::Float64,
 end
 
 ## outer constructor for Tank if collection, source and parents exist
-function Tank(V_max::Float64,
+function Tank(V_max::Real,
               parents::Vector,
               collection::Function,
               source::Function,
-              costs::Float64             # initial costs
+              costs::Real             # initial costs
               )
     tank = Tank(V_max)
     tank.has_parents = true
@@ -88,9 +88,9 @@ end
 
 
 ## outer constructor for Tank if only source exist
-function Tank(V_max::Float64,
+function Tank(V_max::Real,
               source::Function,
-              costs::Float64)            # initial costs
+              costs::Real)            # initial costs
     tank = Tank(V_max)
     tank.source = source
     tank.costs = costs
@@ -106,8 +106,8 @@ function update(tank::Tank)
 
     tank.time += 1
 
-    V_in_coll = 0
-    costs_coll = 0
+    V_in_coll = 0.0
+    costs_coll = 0.0
     ## update all parent tanks and then collect
     if tank.has_parents
         for k in 1:size(tank.parents,1)
@@ -121,9 +121,6 @@ function update(tank::Tank)
 
     ## call source function
     V_in_source, costs_source = tank.source(tank.time)
-
-    ## println(V_in_source)
-    ## println(costs_source)
 
     ## total volume that arrives at the tank
     V_in_tot = V_in_source + V_in_coll
@@ -162,7 +159,7 @@ end
 ## ---------------------------------
 ## return an array of all parent tanks at the same 'level'
 
-function get_parent_tanks(tank::Tank, level::Int)
+function get_parent_tanks(tank::Tank, level::Integer)
 
     level>=0 ? 0 : error("A negative 'level' is not allowed!")
 
@@ -220,7 +217,7 @@ end
 ## !! argument 'field' must be type 'Symbol', i.e. get_field_of_tanks(tanks, :V_max)
 ## Just a wrapper for get_field_of_tanks(get_parent_tanks(tanks, level), :field)
 
-function get_field_of_parent_tanks(tank::Tank, level::Int, field::Symbol)
+function get_field_of_parent_tanks(tank::Tank, level::Integer, field::Symbol)
 
     level>=0 ? nothing : error("A negative 'level' is not allowed!")
 

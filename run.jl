@@ -15,17 +15,16 @@
 ## TODO
 ##
 ## - source function are relatively slow
-## - definition of level in "get_field_of_parent_tanks" is suboptimal
-##     replace with get_field() function?
+## 
 ## - pack everything in a module?
 ##
 ## ---------------------------------
 
 cd("C:/Users/scheidan/Dropbox/Eawag/DeSaM2")
-include("tank.jl")
-include("collections.jl")
-include("sources.jl")
-include("helper.jl")
+include("DeSam/tank.jl")
+include("DeSam/collections.jl")
+include("DeSam/sources.jl")
+include("DeSam/helper.jl")
 
 ## seed for RNG
 srand(111)
@@ -41,14 +40,14 @@ srand(111)
 source_house = def_household_source(10, 1.5) ## max 10 people, 1.5 liter/day/person median
 
 ## tank initial costs 100.00
-toilet_tanks_A = [Tank(11.0, source_house, 100.0) for i=1:100] # uses the *identical* source function each tim
+toilet_tanks_A = [Tank(11, source_house, 100) for i=1:100] # uses the *identical* source function each tim
 show(toilet_tanks_A[1])
 
 
 ## --- toilet tanks B ---
 
 ## create each time a NEW source function
-toilet_tanks_B = [Tank(5.0, def_household_source(10, 1.5), 50.0) for i=1:100]
+toilet_tanks_B = [Tank(5, def_household_source(10, 1.5), 50.00) for i=1:100]
 show(toilet_tanks_B[1])
 
 
@@ -58,8 +57,8 @@ show(toilet_tanks_B[1])
 ## random collection tour of max 25 tanks or max 200L, every 2nd day
 collection_toilets = def_random_collection(25, 200.0, 2)
 
-tank_coll_A = Tank(300.0, toilet_tanks_A, collection_toilets, 500.0)
-tank_coll_B = Tank(300.0, toilet_tanks_B, collection_toilets, 500.0)
+tank_coll_A = Tank(300, toilet_tanks_A, collection_toilets, 500)
+tank_coll_B = Tank(300, toilet_tanks_B, collection_toilets, 500)
 show(tank_coll_A)
 show(tank_coll_B)
 
@@ -106,18 +105,16 @@ end
 println("setup costs: ", total_costs(tank_final))
 
 ## run simuation for 10 years
-@time results = simulate(10*365);
-
-println("Total costs after 10 years: ", total_costs(tank_final))
+@time Volumes_tank_final, Volumes_overflow_households = simulate(10*365);
 
 ## print stored results
-println("Average volume in final tank: ", mean(results[1]))
-println("Average overflow of all household tanks: ", mean(results[2]))
+println("Total costs after 10 years: ", total_costs(tank_final))
+println("Average volume in final tank: ", mean(Volumes_tank_final))
+println("Average overflow of all household tanks: ", mean(Volumes_overflow_households))
 
-print(whos())
 
 ## --- write results to file ---
-## writecsv("output.csv", [[1:t_sim_max] Volumes_tank_houshold_A1 Volumes_tank_coll_1 Volumes_tank_final])
+writecsv("output/output.csv", [Volumes_tank_final Volumes_overflow_households])
 
 ## -------------------------------------------------------
 
