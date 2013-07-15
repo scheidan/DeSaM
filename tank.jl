@@ -6,7 +6,7 @@
 ## File: tank.jl
 ## Path: c:/Users/scheidan/Dropbox/Eawag/JuliaTest/
 ##
-## July 12, 2013 -- Andreas Scheidegger
+## July 15, 2013 -- Andreas Scheidegger
 ##
 ## andreas.scheidegger@eawag.ch
 ## =======================================================
@@ -206,7 +206,7 @@ function get_field_of_tanks(tanks::Vector{Tank}, field::Symbol)
 
     ## find type of field and initialize an empty array
     type_of_field = typeof(getfield(tanks[1], field))
-    @eval fields_return = $type_of_field[]
+    fields_return = type_of_field[]
 
     for i in 1:size(tanks,1)
         push!(fields_return, getfield(tanks[i], field))

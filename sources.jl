@@ -12,7 +12,7 @@
 ## =======================================================
 
 ## should not be necessary if packages are installed properly:
-##include(joinpath("Distributions", "Distributions.jl"))
+include(joinpath("Distributions", "Distributions.jl"))
 
 using Distributions
 
@@ -44,7 +44,7 @@ function def_household_source(n_pers_max::Int, median_V_per_person)
         V_in_tank = V_tot * f_to_toilet_day
 
         ## costs
-        costs = 0.0
+        costs = 1.0
 
         return(V_in_tank, costs)
     end

@@ -6,7 +6,7 @@
 ## File: collections.jl
 ## Path: c:/Users/scheidan/Dropbox/Eawag/JuliaTest/
 ##
-## July 11, 2013 -- Andreas Scheidegger
+## July 15, 2013 -- Andreas Scheidegger
 ##
 ## andreas.scheidegger@eawag.ch
 ## =======================================================
@@ -35,7 +35,7 @@ function def_random_collection(n_tanks_max::Int, # max number of tanks per day
         end
 
         ## costs
-        costs = 1.0
+        costs = 10.0 + V_coll
 
         return(V_coll, costs)
     end
@@ -65,7 +65,7 @@ function def_ordered_collection(n_tanks_max::Int, # max number of tanks per day
         end
 
         ## costs
-        costs = 2.0
+        costs = 10.0 + V_coll
 
         return(V_coll, costs)
     end
