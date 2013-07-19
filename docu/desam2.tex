@@ -1,0 +1,272 @@
+%% =======================================================
+%% Project:
+%%
+%% Description:
+%%
+%% File: desam2.tex
+%% Path: c:/Users/scheidan/Dropbox/Eawag/DeSaM2/docu/
+%%
+%% July 19, 2013 -- Andreas Scheidegger
+%%
+%% andreas.scheidegger@eawag.ch
+%% =======================================================
+
+
+\documentclass[11pt, a4paper, parskip=half*, captions=tableheading]{scrartcl}
+
+% --- use packages
+\usepackage[T1]{fontenc}                % right coding
+\usepackage{lmodern}                    % otherwise \usepackage[T1]{fontenc} uses bitmap fonts
+\usepackage[USenglish]{babel}		% 
+\usepackage{graphicx} 			% to include figures
+\usepackage{amssymb}			% mathe...
+\usepackage{amsmath}
+\usepackage{color}
+\usepackage{microtype}			% for better type setting
+\usepackage{tabularx}			% for tables
+\usepackage{float}                      % enables to force a float enviroment to be excactly here with  [H]
+\usepackage[hang,small,bf]{caption}     % options for captions
+\usepackage{natbib}                     % author–year citations
+%\usepackage{textcomp}			% symbol for celsius
+%\usepackage{pdfpages}			% to include external pdfs with \includepdf[pages={-}]{...pdf}
+%\usepackage{attachfile}                % attach files into pdf document
+%\usepackage{setspace}			% set linespacing: \begin{onehalfspacing} \begin{singlespacing}
+%\usepackage{lineno}                    % for line numbering
+
+\usepackage[ansinew]{inputenc}	        % to type 'Umlaute; directly. On Windows.
+%\usepackage[applemac]{inputenc} 	%          "                  On OS X.
+
+\definecolor{darkblue}{rgb}{0,0,0.5}
+\usepackage[colorlinks=true,
+            linkcolor=darkblue,
+            urlcolor=darkblue,
+            citecolor=darkblue]{hyperref}% pdf-links
+
+% some other fonts
+\usepackage{cmbright}                   % better readable on screen
+% \usepackage{palatino}
+% \usepackage{ccfonts} 
+
+\usepackage{ellipsis}			% correct \dots
+
+% --- options 
+
+\setcounter{secnumdepth}{3}             % how deep should the sections be numerated
+\setcounter{tocdepth}{1}                % how deep should the sections be
+                                        % listed in the 
+% define a command for comments
+\newcommand{\comment}[1] {
+ \marginpar{
+   \begin{flushleft}
+     {\footnotesize
+       $\leftarrow$ \textit{comment:} \newline #1
+     }
+   \end{flushleft}
+ }
+}
+
+
+% =========================================================
+% Title
+
+\title{DeSaM -- Julia implementation} 
+\date{\today}
+\author{\href{mailto: scheidegger.a@gmail.com}{Andreas Scheidegger}}
+
+
+\begin{document}
+\maketitle                      
+
+\tableofcontents
+
+% ============================================
+\section{Introductions}
+
+The Decentralized Sanitation Model (DeSaM) was originaly developed and
+implemented in \textsl{R} by Thomas Hug. 
+
+However, the \textsl{R} implementation is very slow and the design of
+the software is flawed so that bug-fixing and implementation of new
+features became almost impossible. Therefore, DeSaM was reimplemented
+from scratch in \href{http://julialang.org/}{Julia}, a ``high-level,
+high-performance dynamic programming language for technical
+computing''.
+
+The aim of the reimplementation is not to reproduce all features of
+the \textsl{R} version but rather provide a well designed basic structure that can be
+extended easily by the user.
+
+% ============================================
+\section{Design}
+
+A DeSaM simulation consist on a number of interacting \texttt{Tank}
+objects that are arranged in a tree like structure.
+
+% ---------------------------------
+\subsection{Tank}
+
+Each \texttt{Tank} object is defined by its maximal volume, a source
+function, a collection function, and, if existing, a vector of parent
+\texttt{Tank} objects. Direct upstream tanks that are emptied in a tank
+are referred as ``parent tanks''.
+
+The exact type definition:
+{\small
+\begin{verbatim}
+type Tank
+
+    ## tank properties
+    V_max::Float64
+
+    ## State variables
+    V::Float64
+    V_overflow::Float64
+    costs::Float64
+    time::Int
+
+    ## function for sources, takes 'time' as argument
+    ## and returns (volume, costs)
+    source::Function
+
+    ## function for collection, takes 'parent tanks' and 'time' as arguments
+    ## and returns (volume, costs)
+    collection::Function
+
+    ## a vector of elements of type 'tank'
+    has_parents::Bool
+    parents::Vector{Tank}
+
+end
+\end{verbatim}
+}
+
+With exception of \texttt{costs} all internal state variables are
+automatically initialized, so the user does not have to provide
+initial values. However, all state variables can be read during
+the simulation.
+
+\subsubsection{source function}
+The source function can be any function that takes as argument
+\texttt{time} and returns a tuple with the daily volume that goes in
+the tank and the daily costs.
+
+A very minimalist source function could be: 
+{\small 
+\begin{verbatim}
+function simple_source(time)
+    ## produced volume of all household members
+    V = rand()*10 # U(0, 10)
+    ## costs
+    costs = 0.1*V
+    return(V, costs)
+end
+\end{verbatim}
+}
+
+\subsubsection{collection function}
+The collection function can be any function that takes as argument a
+vector of \texttt{Tank} objects and \texttt{time}. It must return a
+tuple with the daily collected volume and the daily costs.
+
+The function must also change the volume of the parent tank when it is emptied!
+
+A minimalist example: 
+{\small 
+\begin{verbatim}
+function simple_collection(tanks::Vector{Tank}, time)
+    V_coll_max = 200.0
+    n_tanks_max = 10
+
+    n_tanks = size(tanks,1)
+
+    ## tanks are emptied the same order
+    V_coll = 0.0
+    for i in 1:min(n_tanks, n_tanks_max)
+        V_tank_out = min(tanks[i].V, V_coll_max - V_coll)
+        tanks[i].V -= V_tank_out   # !!! change volume of parent tank !!!
+        V_coll += V_tank_out     
+    end
+
+    ## costs
+    costs = 10.0 + 0.2*V_coll
+    return(V_coll, costs)
+end
+\end{verbatim}
+}
+
+\subsection{Simulation}
+
+After defining a network of tanks a simulation can be performed. This
+is done by updating the \emph{last tank} via \texttt{update()}.
+\texttt{update()} makes use of the recursive structure and updates all upstream tanks  automatically.
+
+A minimal example of a simulation:{\small
+\begin{verbatim}
+t_sim_max = 365
+for t in 1:t_sim_max
+    ## update final tank
+    update(tank_final)             
+end
+\end{verbatim}
+}
+
+Typically, on is interested in how some state variables evolve over
+time. So a more realistic example is (\texttt{push!(A, e)} adds element \texttt{e} to the end of array \texttt{A}): 
+{\small
+\begin{verbatim}
+## define empty vector to store results
+Volumes_overflow_households = Float64[]
+
+t_sim_max = 365
+for t in 1:t_sim_max
+    ## update final tank
+    update(tank_final)   
+
+    ## compute sum of all overflows
+    V_overflow = sum(get_field_of_parent_tanks(tank_final, 1, :V_overflow)) 
+    ## save every time step
+    push!(Volumes_overflow_households, V_overflow) 
+          
+end
+\end{verbatim}
+}
+
+
+
+% ============================================
+\section{Limitations of the design}
+
+The chosen design enables a very elegant and fast implementation in
+Julia. The core functionality is implemented with less than 150 lines
+of code. More missing features should be easy to add. However, there
+are some intrinsic limitation of the design (not sure if apply to the
+\textsl{R} version, too):
+
+\begin{itemize}
+\item The collections cannot be organized ``globally'' because they
+  depend only on the tanks to empty and the time.
+\item Multiple substances could be implemented, however, different
+  collecting routes for different substances are not possible
+\item Only tree like systems can be simulated. Also distribution is not
+  possible, i.e. to transport volume to several child tanks.
+\end{itemize}
+
+%\citet{le_gat_2009} said that \citep[e.g.][]{le_gat_2009}.
+
+% \begin{figure}[t]
+%   \centering
+%   \includegraphics[width=11cm]{figures/fig.pdf}
+%   \caption{here you see}
+%   \label{fig:fig}
+% \end{figure}
+
+
+% % =======================================================
+% \section{References}
+
+% % References with bibTeX database:
+% \bibliographystyle{elsarticle-harv}
+% \bibliography{myReferences}
+
+
+\end{document}
