@@ -1,0 +1,17 @@
+# files to be ignored by git
+
+# julia
+
+.juliahistory
+output/  
+
+
+# latex
+
+*.aux
+*.log
+*.pdf
+*.synctex.gz
+*.toc
+*out
+docu/auto/

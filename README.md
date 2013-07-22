@@ -1,11 +1,10 @@
-DeSaM
-=====
+# DeSaM
 
-The Decentralized Sanitation Model (DeSaM) was originaly developed and
+The *Decentralized Sanitation Model* (DeSaM) was originaly developed and
 implemented in R by Thomas Hug.
 
 This is a reimplementation of DeSaM from scratch in
-Julia, a ``high-level, high-performance
+[Julia](http://julialang.org/), a ``high-level, high-performance
 dynamic programming language for technical computing''.
 
 The aim of the reimplementation is not to reproduce all features of
