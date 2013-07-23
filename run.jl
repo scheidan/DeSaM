@@ -98,58 +98,43 @@ show(tank_D)
 ## 2) run simulation
 ## -------------------------------------------------------
 
-## println("setup costs: ", total_costs(tank_D))
+println("setup costs: ", total_costs(tank_D))
 
-## ## define empty vectors to save results
-## costs_tank_D = Float64[]
-## V_overflow_tanks_A = Float64[]
+## define empty vectors to save results
+costs_tank_D = Float64[]
+V_overflow_tanks_A = Float64[]
 
-## t_sim_max = 10*365                      # simulate 10 years
-## for t in 1:t_sim_max
+t_sim_max = 10*365                      # simulate 10 years
 
-##     ## update last tank only
-##     update(tank_D)          
+t1 = time()
+for t in 1:t_sim_max
+
+    ## update last tank only
+    update(tank_D)          
     
-##     ## write results in a vector
-##     push!(costs_tank_D, tank_D.costs) # costs, only of tank D (no costs of parent tanks)
+    ## write results in a vector
+    push!(costs_tank_D, tank_D.costs) # costs, only of tank D (no costs of parent tanks)
 
+
+    ## -- three ways to obtain the same fields
+    ## V_overflow = sum(get_field_of_tanks(tanks_A, :V)) # sum of all overflows of tanks A
+    ## V_overflow = sum(get_field_of_parent_tanks(tank_B, 0, :V)) # sum of all overflows of tanks A
+    V_overflow = sum(get_field_of_parent_tanks(tank_D, 1, :V)) # sum of all overflows of tanks A
     
-##     ## V_overflow = sum(get_field_of_parent_tanks(tank_B, 0, :V)) # sum of all overflows of tanks A
-##     ##V_overflow = sum(get_field_of_tanks(tanks_A, :V)) # sum of all overflows of tanks A
-##     V_overflow = sum(get_field_of_parent_tanks(tank_D, 1, :V)) # sum of all overflows of tanks A
-    
-##     push!(V_overflow_tanks_A, V_overflow) 
+    push!(V_overflow_tanks_A, V_overflow) 
 
-## end
+end
+t2 = time()
 
+println("Simulation time [sec]: ", round(t2-t1, 2))
 
-## ## print results
-## println("Total costs after 10 years: ", total_costs(tank_D))
-## println("Average costs of tank D: ", mean(costs_tank_D))
-## println("Average volume of all tanks A: ", mean(V_overflow_tanks_A))
+## print results
+println("Total costs after 10 years: ", total_costs(tank_D))
+println("Average costs of tank D: ", mean(costs_tank_D))
+println("Average volume of all tanks A: ", mean(V_overflow_tanks_A))
 
 
-## ## --- write results to file ---
-## writecsv("output/output.csv", [Volumes_tank_final Volumes_overflow_households])
+## --- write results to file ---
+writecsv("output/output.csv", [costs_tank_D V_overflow_tanks_A])
 
 ## -------------------------------------------------------
-
-
-
-println("-----------")
-println(get_field_of_parent_tanks(tank_D, 1, :V))
-println(get_field_of_parent_tanks(tank_B, 0, :V))
-println(get_field_of_tanks(tanks_A, :V))
-
-## update last tank only
-update(tank_D)          
-
-
-println("update")
-println(get_field_of_parent_tanks(tank_D, 1, :V))
-println(get_field_of_parent_tanks(tank_B, 0, :V))
-println(get_field_of_tanks(tanks_A, :V))
-
-    
-    
-    

@@ -6,7 +6,7 @@
 ## File: tank.jl
 ## Path: c:/Users/scheidan/Dropbox/Eawag/JuliaTest/
 ##
-## July 15, 2013 -- Andreas Scheidegger
+## July 23, 2013 -- Andreas Scheidegger
 ##
 ## andreas.scheidegger@eawag.ch
 ## =======================================================
@@ -64,7 +64,7 @@ function Tank(V_max::Real,
               )
     tank = Tank(V_max)
     tank.has_parents = true
-    tank.parents = Tank[deepcopy(parents[i]) for i=1:size(parents,1)] # deepcopy() makes independet objects
+    tank.parents = parents
     tank.collection = collection
     tank.costs = costs
     return(tank)
@@ -79,7 +79,7 @@ function Tank(V_max::Real,
               )
     tank = Tank(V_max)
     tank.has_parents = true
-    tank.parents = Tank[deepcopy(parents[i]) for i=1:size(parents,1)] # deepcopy() makes independet objects
+    tank.parents = parents
     tank.source = source
     tank.collection = collection
     tank.costs = costs

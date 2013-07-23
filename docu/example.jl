@@ -91,8 +91,15 @@ for t in 1:t_sim_max
     ## write results in a vector
     push!(costs_tank_D, tank_D.costs) # costs, only of tank D (no costs of parent tanks)
 
-    Vol = sum(get_field_of_parent_tanks(tank_D, 1, :V)) # sum of all overflows of tanks A
-    push!(V_tanks_A, Vol) 
+    ## -- three ways to obtain sum of all overflows of tanks A
+    Vol = sum(get_field_of_tanks(tanks_A, :V)) # directly form tanks_A
+    Vol = sum(get_field_of_parent_tanks(tank_B, 0, :V)) # tanks_A are the parents of tank B
+    Vol = sum(get_field_of_parent_tanks(tank_D, 1, :V)) # tanks_A are the parents of tank D at level 1
+
+    
+    push!(V_tanks_A, Vol)
+    ## write results in a vector
+    push!(costs_tank_D, tank_D.costs) # costs, only of tank D (no costs of parent tanks)
 
 end
 
