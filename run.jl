@@ -6,7 +6,7 @@
 ## File: run.jl
 ## Path: c:/Users/scheidan/Dropbox/Eawag/DeSaM2/
 ##
-## July 15, 2013 -- Andreas Scheidegger
+## July 23, 2013 -- Andreas Scheidegger
 ##
 ## andreas.scheidegger@eawag.ch
 ## =======================================================
@@ -20,102 +20,136 @@
 ##
 ## ---------------------------------
 
-cd("C:/Users/scheidan/Dropbox/Eawag/DeSaM2")
-include("DeSam/tank.jl")
-include("DeSam/collections.jl")
-include("DeSam/sources.jl")
-include("DeSam/helper.jl")
+
+cd("c:/Users/scheidan/Dropbox/Eawag/DeSaM2")
+require("DeSaM/tank.jl")
+require("DeSaM/collections.jl")
+require("DeSaM/sources.jl")
+require("DeSaM/helper.jl")
 
 ## seed for RNG
 srand(111)
 
+
 ## -------------------------------------------------------
-## 1) Define tanks, collection and source function
+## 1) Define tanks
 ## -------------------------------------------------------
 
 
-## --- toilet tanks A ---
+## --- tanks A ---
 
-## define function for sources generation:
-source_house = def_household_source(10, 1.5) ## max 10 people, 1.5 liter/day/person median
+## Volume:        10 liters
+## parents:       -
+## collection:    -
+## source:        household_source; 10 people, 1.5 liter/day/person median
+## initial costs: 100.00 
 
-## tank initial costs 100.00
-toilet_tanks_A = [Tank(11, source_house, 100) for i=1:100] # uses the *identical* source function each tim
-show(toilet_tanks_A[1])
-
-
-## --- toilet tanks B ---
-
-## create each time a NEW source function
-toilet_tanks_B = [Tank(5, def_household_source(10, 1.5), 50.00) for i=1:100]
-show(toilet_tanks_B[1])
+tanks_A = [Tank(10, def_household_source(10, 1.5), 100.00) for i=1:6]
+## creats a vector of 6 similar tanks
 
 
-## --- collection tanks A, B ---
+## --- tank B ---
 
-## define function for tank collection
-## random collection tour of max 25 tanks or max 200L, every 2nd day
-collection_toilets = def_random_collection(25, 200.0, 2)
+## Volume:        50 liters
+## parents:       tanks_A
+## collection:    random collection;  max 5 tanks or max 20L, every 2nd day
+## source:        household_source; 10 people, 1.5 liter/day/person median
+## initial costs: 250.00 (tank) + 100.00 (collection)
 
-tank_coll_A = Tank(300, toilet_tanks_A, collection_toilets, 500)
-tank_coll_B = Tank(300, toilet_tanks_B, collection_toilets, 500)
-show(tank_coll_A)
-show(tank_coll_B)
+tank_B = Tank(50,
+              tanks_A,
+              def_random_collection(5, 20, 2),
+              def_household_source(10, 1.5),
+              250.00+100.00)
+show(tank_B)
 
 
-## --- finale tank ---
+## --- tanks C ---
 
-## ordered collection tour of max 25 tanks or max 100L, every 3th day
-collection_coll_tank = def_ordered_collection(25, 100.0, 3)
+## Volume:        20 liters
+## parents:       -
+## collection:    -
+## source:        household_source; 15 people, 1.5 liter/day/person median
+## initial costs: 150.00 each
 
-tank_final = Tank(5000.0, [tank_coll_A, tank_coll_B], collection_coll_tank, 1000.0)
-## tank_final = Tank(5000.0, [[tank_coll_A for i=1:50], [tank_coll_B for i=1:50]], collection_coll_tank, 3333.0)
-show(tank_final)
+tanks_C = [Tank(20, def_household_source(15, 1.5), 150.00) for i=1:4]
+## creats a vector of 4 similar tanks
+
+
+## --- tank D ---
+
+## Volume:        150 liters,
+## parents:       [tank_B, tanks_C]
+## collection:    random collection;  max 5 tanks or max 200L, every 3nd day
+## source:        -
+## initial costs: 500.00 (tank) + 200.00 (collection)
+
+tank_D = Tank(150,
+              [tank_B, tanks_C],
+              def_random_collection(5, 200, 3),
+              500.00 + 200.00)
+show(tank_D)
+
+
+
 
 
 ## -------------------------------------------------------
 ## 2) run simulation
 ## -------------------------------------------------------
 
-## --- define simulation function ---
+## println("setup costs: ", total_costs(tank_D))
 
-function simulate(t_sim_max)    ## simulation time
+## ## define empty vectors to save results
+## costs_tank_D = Float64[]
+## V_overflow_tanks_A = Float64[]
 
-    ## define empty vectors to save results
-    Volumes_tank_final = Float64[]
-    Volumes_overflow_households = Float64[]
+## t_sim_max = 10*365                      # simulate 10 years
+## for t in 1:t_sim_max
 
-    for t in 1:t_sim_max
+##     ## update last tank only
+##     update(tank_D)          
+    
+##     ## write results in a vector
+##     push!(costs_tank_D, tank_D.costs) # costs, only of tank D (no costs of parent tanks)
 
-        ## update final tank
-        update(tank_final)              # update only the last tank!!!
-       
-        ## write results in a vector
-        push!(Volumes_tank_final, tank_final.V) # Volume of in final tank
-        V_overflow = sum(get_field_of_parent_tanks(tank_final, 1, :V_overflow)) # sum of all household overflows
-        push!(Volumes_overflow_households, V_overflow) # sum of overflow of household tanks
+    
+##     ## V_overflow = sum(get_field_of_parent_tanks(tank_B, 0, :V)) # sum of all overflows of tanks A
+##     ##V_overflow = sum(get_field_of_tanks(tanks_A, :V)) # sum of all overflows of tanks A
+##     V_overflow = sum(get_field_of_parent_tanks(tank_D, 1, :V)) # sum of all overflows of tanks A
+    
+##     push!(V_overflow_tanks_A, V_overflow) 
 
-    end
-
-    println(" -- Done! -- ")
-    return(Volumes_tank_final, Volumes_overflow_households)
-end
-
-
-println("setup costs: ", total_costs(tank_final))
-
-## run simuation for 10 years
-@time Volumes_tank_final, Volumes_overflow_households = simulate(10*365);
-
-## print stored results
-println("Total costs after 10 years: ", total_costs(tank_final))
-println("Average volume in final tank: ", mean(Volumes_tank_final))
-println("Average overflow of all household tanks: ", mean(Volumes_overflow_households))
+## end
 
 
-## --- write results to file ---
-writecsv("output/output.csv", [Volumes_tank_final Volumes_overflow_households])
+## ## print results
+## println("Total costs after 10 years: ", total_costs(tank_D))
+## println("Average costs of tank D: ", mean(costs_tank_D))
+## println("Average volume of all tanks A: ", mean(V_overflow_tanks_A))
+
+
+## ## --- write results to file ---
+## writecsv("output/output.csv", [Volumes_tank_final Volumes_overflow_households])
 
 ## -------------------------------------------------------
 
 
+
+println("-----------")
+println(get_field_of_parent_tanks(tank_D, 1, :V))
+println(get_field_of_parent_tanks(tank_B, 0, :V))
+println(get_field_of_tanks(tanks_A, :V))
+
+## update last tank only
+update(tank_D)          
+
+
+println("update")
+println(get_field_of_parent_tanks(tank_D, 1, :V))
+println(get_field_of_parent_tanks(tank_B, 0, :V))
+println(get_field_of_tanks(tanks_A, :V))
+
+    
+    
+    

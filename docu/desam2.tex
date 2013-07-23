@@ -85,9 +85,9 @@
 The Decentralized Sanitation Model (DeSaM) was originaly developed and
 implemented in \textsl{R} by Thomas Hug. 
 
-However, the \textsl{R} implementation is very slow and the design of
-the software is flawed so that bug-fixing and implementation of new
-features became almost impossible. Therefore, DeSaM was reimplemented
+However, the \textsl{R} implementation is very slow and software
+design is somewhat flawed. This makes bug-fixing and implementation of new
+features almost impossible. Therefore, DeSaM was reimplemented
 from scratch in \href{http://julialang.org/}{Julia}, a ``high-level,
 high-performance dynamic programming language for technical
 computing''.
@@ -99,18 +99,34 @@ extended easily by the user.
 % ============================================
 \section{Design}
 
-A DeSaM simulation consist on a number of interacting \texttt{Tank}
-objects that are arranged in a tree like structure.
+A DeSaM simulation consist only of interacting \texttt{Tank}
+objects. The tanks are arranged in a tree like structure. A tank can
+be filled either directly by a source (e.g.\ a household) or by
+collecting from upstream tanks.
+
 
 % ---------------------------------
-\subsection{Tank}
+\subsection{Tanks}
 
-Each \texttt{Tank} object is defined by its maximal volume, a source
-function, a collection function, and, if existing, a vector of parent
-\texttt{Tank} objects. Direct upstream tanks that are emptied in a tank
-are referred as ``parent tanks''.
+Each \texttt{Tank} object (see Figure~\ref{fig:tank}) is defined by
+its maximal volume, the initial costs, a source function, a collection
+function, and, if existing, a vector of parent \texttt{Tank}
+objects. Direct upstream tanks that are emptied in a tank are referred
+as ``parent tanks''. A tank has tree state variables that are updated
+over time: the tank volume, the overflow volume, and the costs.
 
-The exact type definition:
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.5\textwidth]{figures/tank.pdf}
+  \caption{Structure of a \texttt{Tank} object.}
+  \label{fig:tank}
+\end{figure}
+
+
+The type definition shows all fields\footnote{A ``field'' is an element
+  of a composit type, e.g. \texttt{V\_max}. The expected type of a
+  field is indicated after the ``\texttt{::}''~operator.} of a tank
+objetcs in detail:
 {\small
 \begin{verbatim}
 type Tank
@@ -140,17 +156,35 @@ end
 \end{verbatim}
 }
 
-With exception of \texttt{costs} all internal state variables are
-automatically initialized, so the user does not have to provide
-initial values. However, all state variables can be read during
-the simulation.
+
+Three functions are available to create \texttt{Tank} objects:
+{\small
+\begin{verbatim}
+Tank(V_max::Real, source::Function, costs::Real)
+Tank(V_max::Real, parents::Vector, collection::Function, costs::Real)
+Tank(V_max::Real, parents::Vector, collection::Function, source::Function, costs::Real)
+\end{verbatim}
+}
+The first option is used when a tank has no parents and no
+collection. The second function is typically used for the collection
+tanks. The last function defines a tank that serves as collection tank
+and has a direct source at the same time.
+
+Initial costs of the tank \emph{and}, if needed, of the
+collection are defined by \texttt{costs}.
+
+The behavior of a tank is largely influenced by its source and
+collection functions.  In most cases the user will provide these
+functions. However, some basic functions are implemented that can be
+modified or used directly. 
+
 
 \subsubsection{source function}
 The source function can be any function that takes as argument
 \texttt{time} and returns a tuple with the daily volume that goes in
 the tank and the daily costs.
 
-A very minimalist source function could be: 
+A very simple source function could be: 
 {\small 
 \begin{verbatim}
 function simple_source(time)
@@ -167,16 +201,15 @@ end
 The collection function can be any function that takes as argument a
 vector of \texttt{Tank} objects and \texttt{time}. It must return a
 tuple with the daily collected volume and the daily costs.
+\textbf{The function must also change the volume of each parent tank
+  that is emptied!}
 
-The function must also change the volume of the parent tank when it is emptied!
-
-A minimalist example: 
+A minimalistic example: 
 {\small 
 \begin{verbatim}
 function simple_collection(tanks::Vector{Tank}, time)
     V_coll_max = 200.0
     n_tanks_max = 10
-
     n_tanks = size(tanks,1)
 
     ## tanks are emptied the same order
@@ -189,6 +222,7 @@ function simple_collection(tanks::Vector{Tank}, time)
 
     ## costs
     costs = 10.0 + 0.2*V_coll
+
     return(V_coll, costs)
 end
 \end{verbatim}
@@ -196,9 +230,10 @@ end
 
 \subsection{Simulation}
 
-After defining a network of tanks a simulation can be performed. This
+After defining a network of tanks the simulation can be performed. This
 is done by updating the \emph{last tank} via \texttt{update()}.
-\texttt{update()} makes use of the recursive structure and updates all upstream tanks  automatically.
+\texttt{update()} makes use of the recursive structure and updates all
+upstream (parent) tanks  automatically.
 
 A minimal example of a simulation:{\small
 \begin{verbatim}
@@ -210,12 +245,13 @@ end
 \end{verbatim}
 }
 
-Typically, on is interested in how some state variables evolve over
-time. So a more realistic example is (\texttt{push!(A, e)} adds element \texttt{e} to the end of array \texttt{A}): 
-{\small
+Typically, on is interested how some state variables evolve over
+time. A more realistic example where every day the total overflow
+volume of the household tanks is stored (the function \texttt{push!(A, e)} adds
+element \texttt{e} to the end of array \texttt{A}): {\small
 \begin{verbatim}
-## define empty vector to store results
-Volumes_overflow_households = Float64[]
+## define an empty vector to store results
+Volumes_overflow_households = Float64[]   # type must be given
 
 t_sim_max = 365
 for t in 1:t_sim_max
@@ -232,14 +268,24 @@ end
 }
 
 
+% ============================================
+\section{Example}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figures/tank_tree.pdf}
+  \caption{Tree structure of the example with four different types of tanks.}
+  \label{fig:tree}
+\end{figure}
+
 
 % ============================================
 \section{Limitations of the design}
 
 The chosen design enables a very elegant and fast implementation in
-Julia. The core functionality is implemented with less than 150 lines
-of code. More missing features should be easy to add. However, there
-are some intrinsic limitation of the design (not sure if apply to the
+Julia. So is the core functionality implemented with less than 150 lines
+of code. Most missing features should be easy to add. However, there
+are intrinsic limitation of the design (not sure how far they apply to the
 \textsl{R} version, too):
 
 \begin{itemize}

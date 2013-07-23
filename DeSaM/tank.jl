@@ -26,11 +26,11 @@ type Tank
     costs::Float64
     time::Int
 
-    ## function for sources, takes 'time' as agrument
+    ## function for sources, takes 'time' as argument
     ## and returns (volume, costs)
     source::Function
 
-    ## function for collection, takes 'parent tanks' and 'time' as argments
+    ## function for collection, takes 'parent tanks' and 'time' as arguments
     ## and returns (volume, costs)
     collection::Function
 
@@ -161,7 +161,7 @@ end
 
 function get_parent_tanks(tank::Tank, level::Integer)
 
-    level>=0 ? 0 : error("A negative 'level' is not allowed!")
+    level>=0 ? nothing : error("A negative 'level' is not allowed!")
 
     tanks_return = Tank[]
     for i in 1:size(tank.parents,1)
