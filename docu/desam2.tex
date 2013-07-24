@@ -377,9 +377,9 @@ for t in 1:t_sim_max
     ## -- three ways to obtain sum of all overflows of tanks A
     Vol = sum(get_field_of_tanks(tanks_A, :V)) # directly from tanks_A
     Vol = sum(get_field_of_upstream_tanks(tank_B, 0, :V)) # tanks_A are the
-                                                          #   upstream tanks of tank B
+                                                          # upstream tanks of tank B
     Vol = sum(get_field_of_upstream_tanks(tank_D, 1, :V)) # tanks_A are the
-                                                          #   upstream tanks of tank D at level 1
+                                                          # upstream tanks of tank D at level 1
 
     ## write results in a vector
     push!(V_tanks_A, Vol)
@@ -399,22 +399,41 @@ writecsv("output/output.csv", [V_tanks_A costs_tank_D])
 \end{verbatim}
 }
 
+Three functions are defined to access the fields of multible tanks
+conveniently.
+{\small
+\begin{verbatim}
+## return the 'field's of an array of Tank objects
+get_field_of_tanks(tanks::Vector{Tank}, field::Symbol)
+
+## returns the 'field's of *all* upstream tanks of 'tank'
+get_field_of_upstream_tanks(tank::Tank, field::Symbol)
+
+## returns the 'field's of the upstream_tanks of 'tank' of the same 'level'.
+## e.g. 'level=0' returns the direct upstream tanks, 'level=1' the
+## upstream tanks of the upstream tank, etc.
+get_field_of_upstream_tanks(tank::Tank, level::Integer, field::Symbol)
+\end{verbatim}
+}
+Note, the argument \texttt{field} must be a symbol, i.e. a ``\texttt{:}'' must
+precede the file name (see example above).
+
 % ============================================
 \section{Limitations of the design}
 
 The chosen design enables a very elegant and fast implementation in
-Julia. So is the core functionality implemented with less than 150 lines
-of code. Most missing features should be easy to add. However, there
-are intrinsic limitation of the design (not sure how far they apply to the
-\textsl{R} version, too):
+Julia. So is the core functionality implemented with less than 150
+lines of code. Most missing features should be easy to add. However,
+there are some intrinsic limitations of the design (they may or may
+not apply to the \textsl{R} version):
 
 \begin{itemize}
 \item The collections cannot be organized ``globally'' because they
   depend only on the tanks to empty and the time.
 \item Multiple substances could be implemented, however, different
-  collecting routes for different substances are not possible
+  collecting routes (i.e. different tree structures) for different substances are not possible
 \item Only tree like systems can be simulated. Also distribution is not
-  possible, i.e. to transport volume form one tank to several
+  possible, i.e. transport volume from one tank to several
   downstream tanks.
 \end{itemize}
 

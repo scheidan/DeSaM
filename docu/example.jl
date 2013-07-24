@@ -1,3 +1,15 @@
+## =======================================================
+## Project: DESAM 2.0
+##
+## Description: Example used on the documantation
+##
+## File: example.jl
+## Path: c:/Users/scheidan/Dropbox/Eawag/DeSaM2/docu/
+##
+## July 24, 2013 -- Andreas Scheidegger
+##
+## andreas.scheidegger@eawag.ch
+## =======================================================
 
 cd("c:/Users/scheidan/Dropbox/Eawag/DeSaM2")
 require("DeSaM/tank.jl")
@@ -7,7 +19,6 @@ require("DeSaM/helper.jl")
 
 ## seed for RNG
 srand(111)
-
 
 
 
@@ -70,7 +81,8 @@ tank_D = Tank(150,
               500.00 + 200.00)
 show(tank_D)
 
-
+## plot the structure of the tanks
+plot(tank_D)
 
 
 
