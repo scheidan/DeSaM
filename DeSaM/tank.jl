@@ -199,7 +199,7 @@ end
 
 
 ## ---------------------------------
-## return all 'field's of an array of Tank objects
+## return the 'field's of an array of Tank objects
 ## !! argument 'field' must be type 'Symbol', i.e. get_field_of_tanks(tanks, :V_max)
 
 function get_field_of_tanks(tanks::Vector{Tank}, field::Symbol)
@@ -216,7 +216,7 @@ function get_field_of_tanks(tanks::Vector{Tank}, field::Symbol)
 end
 
 ## ---------------------------------
-## Returns all 'field's of the 'level' upstream_tanks of 'tank'
+## Returns the 'field's of the 'level' upstream_tanks of 'tank'
 ## !! argument 'field' must be type 'Symbol', i.e. get_field_of_tanks(tanks, :V_max)
 ## Just a wrapper for get_field_of_tanks(get_upstream_tanks(tanks, level), :field)
 
@@ -230,7 +230,7 @@ end
 
 
 ## ---------------------------------
-## Returns all 'field's of all upstream_tanks of 'tank'
+## Returns the 'field's of all upstream_tanks of 'tank'
 ## !! argument 'field' must be type 'Symbol', i.e. get_field_of_tanks(tanks, :V_max)
 ## Just a wrapper for get_field_of_tanks(get_upstream_tanks(tanks), :field)
 

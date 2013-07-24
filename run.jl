@@ -85,13 +85,14 @@ tanks_C = [Tank(20, def_household_source(15, 1.5), 150.00) for i=1:4]
 ## initial costs:  500.00 (tank) + 200.00 (collection)
 
 tank_D = Tank(150,
-              [tank_B, tanks_C],
+              [tank_B, tanks_C, tank_B],
               def_random_collection(5, 200, 3),
               500.00 + 200.00)
-## show(tank_D)
+show(tank_D)
 
 
-
+## --- plot system
+plot(tank_D)
 
 
 ## -------------------------------------------------------
@@ -134,18 +135,8 @@ println("Average costs of tank D: ", mean(costs_tank_D))
 println("Average volume of all tanks A: ", mean(V_overflow_tanks_A))
 
 
-## --- write results to file ---
-writecsv("output/output.csv", [costs_tank_D V_overflow_tanks_A])
+## ## --- write results to file ---
+## writecsv("output/output.csv", [costs_tank_D V_overflow_tanks_A])
 
 ## -------------------------------------------------------
 
-
-## println(n_upstream_tanks_level(tank_D))
-
-## println(n_upstream_tanks_level(tanks_A[1]))
-
-## draw(tank_D, 30)
-
-
-## println("========================")
-## plot(tank_D)
