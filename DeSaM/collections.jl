@@ -6,7 +6,7 @@
 ## File: collections.jl
 ## Path: c:/Users/scheidan/Dropbox/Eawag/JuliaTest/
 ##
-## July 15, 2013 -- Andreas Scheidegger
+## July 24, 2013 -- Andreas Scheidegger
 ##
 ## andreas.scheidegger@eawag.ch
 ## =======================================================
@@ -17,8 +17,8 @@
 ## - tanks are emptied in random order -
 
 function def_random_collection(n_tanks_max::Integer, # max number of tanks per day
-                               V_coll_max::Real, # max. volume per day
-                               work_days::Integer)      # tour is every 'work_days'-th days
+                               V_coll_max::Real,     # max. volume per day
+                               work_days::Integer)   # tour is every 'work_days'-th days
 
 
     function random_collection(tanks::Vector{Tank}, time)
@@ -49,8 +49,8 @@ end
 ## - tanks are emptied in same order -
 
 function def_ordered_collection(n_tanks_max::Integer, # max number of tanks per day
-                                V_coll_max::Real, # max. volume per day
-                                work_days::Integer)      # tour is every 'work_days'-th days
+                                V_coll_max::Real,     # max. volume per day
+                                work_days::Integer)   # tour is every 'work_days'-th days
 
     function ordered_collection(tanks::Vector{Tank}, time)
 
@@ -69,7 +69,6 @@ function def_ordered_collection(n_tanks_max::Integer, # max number of tanks per 
 
         return(V_coll, costs)
     end
-
 
     return(ordered_collection)
 end

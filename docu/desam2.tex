@@ -86,8 +86,8 @@ The Decentralized Sanitation Model (DeSaM) was originaly developed and
 implemented in \textsl{R} by Thomas Hug. 
 
 However, the \textsl{R} implementation is very slow and software
-design is somewhat flawed. This makes bug-fixing and implementation of new
-features almost impossible. Therefore, DeSaM was reimplemented
+design is somewhat flawed so that bug-fixing and implementation of new
+features became almost impossible. Therefore, DeSaM was reimplemented
 from scratch in \href{http://julialang.org/}{Julia}, a ``high-level,
 high-performance dynamic programming language for technical
 computing''.
@@ -110,9 +110,8 @@ collecting from upstream tanks.
 
 Each \texttt{Tank} object (see Figure~\ref{fig:tank}) is defined by
 its maximal volume, the initial costs, a source function, a collection
-function, and, if existing, a vector of parent \texttt{Tank}
-objects. Direct upstream tanks that are emptied in a tank are referred
-as ``parent tanks''. A tank has tree state variables that are updated
+function, and, if existing, a vector of upstream \texttt{Tank}
+objects. A tank has tree state variables that are updated
 over time: the tank volume, the overflow volume, and the costs.
 
 \begin{figure}[h]
@@ -125,8 +124,8 @@ over time: the tank volume, the overflow volume, and the costs.
 
 The type definition shows all fields\footnote{A ``field'' is an element
   of a composit type, e.g. \texttt{V\_max}. The expected type of a
-  field is indicated after the ``\texttt{::}''~operator.} of a tank
-objetcs in detail:
+  field is indicated after the ``\texttt{::}''~operator.} of a \texttt{Tank}
+object in detail:
 {\small
 \begin{verbatim}
 type Tank
@@ -144,13 +143,13 @@ type Tank
     ## and returns (volume, costs)
     source::Function
 
-    ## function for collection, takes 'parent tanks' and 'time' as arguments
+    ## function for collection, takes 'upstream tanks' and 'time' as arguments
     ## and returns (volume, costs)
     collection::Function
 
     ## a vector of elements of type 'tank'
-    has_parents::Bool
-    parents::Vector{Tank}
+    has_upstream_tanks::Bool
+    upstream_tanks::Vector{Tank}
 
 end
 \end{verbatim}
@@ -161,16 +160,15 @@ Three functions are available to create \texttt{Tank} objects:
 {\small
 \begin{verbatim}
 Tank(V_max::Real, source::Function, costs::Real)
-Tank(V_max::Real, parents::Vector, collection::Function, costs::Real)
-Tank(V_max::Real, parents::Vector, collection::Function, source::Function, costs::Real)
+Tank(V_max::Real, upstream_tanks::Vector, collection::Function, costs::Real)
+Tank(V_max::Real, upstream_tanks::Vector, collection::Function, source::Function, costs::Real)
 \end{verbatim}
-}
-The first option is used when a tank has no parents and no
-collection. The second function is typically used for the collection
-tanks. The last function defines a tank that serves as collection tank
-and has a direct source at the same time.
+} The first option is used when a tank has no upstream tanks and
+threrefore no collection neither. The second function is typically used for
+ collection tanks. The last function defines a tank that serves as
+collection tank and has a direct source at the same time.
 
-Initial costs of the tank \emph{and}, if needed, of the
+Initial costs of the tank \emph{and}, if existing, of the
 collection are defined by \texttt{costs}.
 
 The behavior of a tank is largely influenced by its source and
@@ -184,7 +182,7 @@ The source function can be any function that takes as argument
 \texttt{time} and returns a tuple with the daily volume that goes in
 the tank and the daily costs.
 
-A very simple source function could be: 
+A very simple source function is: 
 {\small 
 \begin{verbatim}
 function simple_source(time)
@@ -231,9 +229,9 @@ end
 \subsection{Simulation}
 
 After defining a network of tanks the simulation can be performed. This
-is done by updating the \emph{last tank} via \texttt{update()}.
+is done by updating the \emph{last} tank via \texttt{update()}.
 \texttt{update()} makes use of the recursive structure and updates all
-upstream (parent) tanks  automatically.
+upstream tanks  automatically.
 
 A minimal example of a simulation:{\small
 \begin{verbatim}
@@ -271,13 +269,135 @@ end
 % ============================================
 \section{Example}
 
+As an extended example it is illustrated how the system  in
+Figure~\ref{fig:tree} is implemented.
+
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.8\textwidth]{figures/tank_tree.pdf}
-  \caption{Tree structure of the example with four different types of tanks.}
+  \caption{Tank structure of the example with four different types of tanks.}
   \label{fig:tree}
 \end{figure}
 
+\subsection{Tank definition}
+
+The first step is the definition of all tanks.
+{\small
+\begin{verbatim}
+## -------------------------------------------------------
+## 1) Define tanks
+## -------------------------------------------------------
+
+## --- tanks A ---
+
+## Volume:         10 liters
+## upstream_tanks: -
+## collection:     -
+## source:         household_source; 10 people, 1.5 liter/day/person median
+## initial costs:  100.00 
+
+tanks_A = [Tank(10, def_household_source(10, 1.5), 100.00) for i=1:6]
+## creats a vector of 6 similar tanks
+
+
+## --- tank B ---
+
+## Volume:         50 liters
+## upstream_tanks: tanks_A
+## collection:     random collection;  max 5 tanks or max 20L, every 2nd day
+## source:         household_source; 10 people, 1.5 liter/day/person median
+## initial costs:  250.00 (tank) + 100.00 (collection)
+
+tank_B = Tank(50,
+              tanks_A,
+              def_random_collection(5, 20, 2),
+              def_household_source(10, 1.5),
+              250.00+100.00)
+show(tank_B)
+
+
+## --- tanks C ---
+
+## Volume:         20 liters
+## upstream_tanks: -
+## collection:     -
+## source:         household_source; 15 people, 1.5 liter/day/person median
+## initial costs:  150.00 each
+
+tanks_C = [Tank(20, def_household_source(15, 1.5), 150.00) for i=1:4]
+## creats a vector of 4 similar tanks
+
+
+## --- tank D ---
+
+## Volume:         150 liters,
+## upstream_tanks: [tank_B, tanks_C]
+## collection:     random collection;  max 5 tanks or max 200L, every 3nd day
+## source:         -
+## initial costs:  500.00 (tank) + 200.00 (collection)
+
+tank_D = Tank(150,
+              [tank_B, tanks_C],
+              def_random_collection(5, 200, 3),
+              500.00 + 200.00)
+show(tank_D)
+\end{verbatim}
+}
+
+Here the functions \texttt{def\_random\_collection()} and
+\texttt{def\_household\_source()} are used to define conveniently
+different source ans collection function, i.e.\ are these functions
+that return a function. \texttt{show()} prints a summary of 
+properties of tank.
+
+Note the use of the
+\href{http://docs.julialang.org/en/release-0.1/manual/arrays/#comprehensions}{comprehension}
+syntax to produce arrays of similar tanks.
+
+
+\subsection{simulation}
+{\small
+\begin{verbatim}
+## -------------------------------------------------------
+## 2) run simulation
+## -------------------------------------------------------
+
+println("setup costs: ", total_costs(tank_D))
+
+## define empty vectors to save results
+costs_tank_D = Float64[]
+V_tanks_A = Float64[]
+
+t_sim_max = 10*365                      # simulate 10 years
+for t in 1:t_sim_max
+
+    ## update last tank only
+    update(tank_D)          
+
+    ## -- three ways to obtain sum of all overflows of tanks A
+    Vol = sum(get_field_of_tanks(tanks_A, :V)) # directly from tanks_A
+    Vol = sum(get_field_of_upstream_tanks(tank_B, 0, :V)) # tanks_A are the
+                                                          #   upstream tanks of tank B
+    Vol = sum(get_field_of_upstream_tanks(tank_D, 1, :V)) # tanks_A are the
+                                                          #   upstream tanks of tank D at level 1
+
+    ## write results in a vector
+    push!(V_tanks_A, Vol)
+    push!(costs_tank_D, tank_D.costs) # costs, only of tank D (no costs of parent tanks)
+
+end
+
+
+## print results
+println("Total costs after 10 years: ", total_costs(tank_D))
+println("Average costs of tank D: ", mean(costs_tank_D))
+println("Average volume off all tanks A: ", mean(V_tanks_A))
+
+
+## --- write results to file ---
+writecsv("output/output.csv", [V_tanks_A costs_tank_D])
+\end{verbatim}
+}
 
 % ============================================
 \section{Limitations of the design}
@@ -294,7 +414,8 @@ are intrinsic limitation of the design (not sure how far they apply to the
 \item Multiple substances could be implemented, however, different
   collecting routes for different substances are not possible
 \item Only tree like systems can be simulated. Also distribution is not
-  possible, i.e. to transport volume to several child tanks.
+  possible, i.e. to transport volume form one tank to several
+  downstream tanks.
 \end{itemize}
 
 %\citet{le_gat_2009} said that \citep[e.g.][]{le_gat_2009}.

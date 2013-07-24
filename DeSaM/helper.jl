@@ -7,15 +7,15 @@
 ## File: helper.jl
 ## Path: c:/Users/scheidan/Dropbox/Eawag/DeSaM2/
 ##
-## July 15, 2013 -- Andreas Scheidegger
+## July 24, 2013 -- Andreas Scheidegger
 ##
 ## andreas.scheidegger@eawag.ch
 ## =======================================================
 
     
 ## ---------------------------------
-## Returns all costs of 'tank' and all its (grand)parents tank 
+## Returns all costs of 'tank' and all its upstream tanks
 
 function total_costs(tank::Tank)
-    sum(get_field_of_parent_tanks(tank, :costs)) + tank.costs
+    sum(get_field_of_upstream_tanks(tank, :costs)) + tank.costs
 end

@@ -6,7 +6,7 @@
 ## File: tank.jl
 ## Path: c:/Users/scheidan/Dropbox/Eawag/JuliaTest/
 ##
-## July 23, 2013 -- Andreas Scheidegger
+## July 24, 2013 -- Andreas Scheidegger
 ##
 ## andreas.scheidegger@eawag.ch
 ## =======================================================
@@ -30,16 +30,16 @@ type Tank
     ## and returns (volume, costs)
     source::Function
 
-    ## function for collection, takes 'parent tanks' and 'time' as arguments
+    ## function for collection, takes 'upstream tanks' and 'time' as arguments
     ## and returns (volume, costs)
     collection::Function
 
     ## a vector of elements of type 'tank'
-    has_parents::Bool
-    parents::Vector{Tank}
+    has_upstream_tanks::Bool
+    upstream_tanks::Vector{Tank}
 
 
-    ## construct incomplete Tank object WITHOUT parents
+    ## construct incomplete Tank object WITHOUT upstream_tanks
     function Tank(V_max::Real)
         ## default values
         V = 0.0
@@ -48,38 +48,38 @@ type Tank
         time = 0
         no_sources(time) = (0.0, 0.0)
         no_collection(tanks::Vector{Tank}, time) = (0.0, 0.0)
-        has_parents = false
+        has_upstream_tanks = false
         ## create instance
-        new(V_max, V, V_overflow, costs, time, no_sources, no_collection, has_parents)
+        new(V_max, V, V_overflow, costs, time, no_sources, no_collection, has_upstream_tanks)
     end
 
 end
 
 
-## outer constructor for Tank if collection and parents exist
+## outer constructor for Tank if collection and upstream_tanks exist
 function Tank(V_max::Real,
-              parents::Vector,
+              upstream_tanks::Vector,
               collection::Function,
               costs::Real             # initial costs
               )
     tank = Tank(V_max)
-    tank.has_parents = true
-    tank.parents = parents
+    tank.has_upstream_tanks = true
+    tank.upstream_tanks = upstream_tanks
     tank.collection = collection
     tank.costs = costs
     return(tank)
 end
 
-## outer constructor for Tank if collection, source and parents exist
+## outer constructor for Tank if collection, source and upstream_tanks exist
 function Tank(V_max::Real,
-              parents::Vector,
+              upstream_tanks::Vector,
               collection::Function,
               source::Function,
               costs::Real             # initial costs
               )
     tank = Tank(V_max)
-    tank.has_parents = true
-    tank.parents = parents
+    tank.has_upstream_tanks = true
+    tank.upstream_tanks = upstream_tanks
     tank.source = source
     tank.collection = collection
     tank.costs = costs
@@ -108,14 +108,14 @@ function update(tank::Tank)
 
     V_in_coll = 0.0
     costs_coll = 0.0
-    ## update all parent tanks and then collect
-    if tank.has_parents
-        for k in 1:size(tank.parents,1)
-            update(tank.parents[k])
+    ## update all upstream tanks and then collect
+    if tank.has_upstream_tanks
+        for k in 1:size(tank.upstream_tanks,1)
+            update(tank.upstream_tanks[k])
         end
 
         ## call collection function
-        V_in_coll, costs_coll = tank.collection(tank.parents, tank.time)
+        V_in_coll, costs_coll = tank.collection(tank.upstream_tanks, tank.time)
 
     end
 
@@ -143,11 +143,11 @@ end
 function show(tank::Tank)
     println("---")
     println("V_max: ", tank.V_max)
-    if(tank.has_parents)
-        println("parent tanks: ", size(tank.parents,1))
+    if(tank.has_upstream_tanks)
+        println("# of upstream tanks: ", size(tank.upstream_tanks,1))
         println("Collection function: ", tank.collection, "()")
     else
-       println("no parent tank")
+       println("no upstream tank")
     end
     println("Source function: ", tank.source, "()")
     println("Simulation time [days]: ", tank.time)
@@ -157,19 +157,21 @@ end
 
 
 ## ---------------------------------
-## return an array of all parent tanks at the same 'level'
+## return an array of all upstream tanks at the same 'level'
 
-function get_parent_tanks(tank::Tank, level::Integer)
+function get_upstream_tanks(tank::Tank, level::Integer)
 
     level>=0 ? nothing : error("A negative 'level' is not allowed!")
 
     tanks_return = Tank[]
-    for i in 1:size(tank.parents,1)
-        if level==0
-            push!(tanks_return, tank.parents[i])
-        else
-            if tank.parents[i].has_parents
-                append!(tanks_return, get_parent_tanks(tank.parents[i], level-1))
+    if tank.has_upstream_tanks
+        for i in 1:size(tank.upstream_tanks,1)
+            if level==0
+                push!(tanks_return, tank.upstream_tanks[i])
+            else
+                if tank.upstream_tanks[i].has_upstream_tanks
+                    append!(tanks_return, get_upstream_tanks(tank.upstream_tanks[i], level-1))
+                end
             end
         end
     end
@@ -178,18 +180,19 @@ function get_parent_tanks(tank::Tank, level::Integer)
 end
 
 ## ---------------------------------
-## return an array of parent tanks of all levels
+## return an array of upstream tanks of all levels
 
-function get_parent_tanks(tank::Tank)
+function get_upstream_tanks(tank::Tank)
 
     tanks_return = Tank[]
-    for i in 1:size(tank.parents,1)
-        push!(tanks_return, tank.parents[i])
-        if tank.parents[i].has_parents
-            append!(tanks_return, get_parent_tanks(tank.parents[i]))
+    if tank.has_upstream_tanks
+        for i in 1:size(tank.upstream_tanks,1)
+            push!(tanks_return, tank.upstream_tanks[i])
+            if tank.upstream_tanks[i].has_upstream_tanks
+                append!(tanks_return, get_upstream_tanks(tank.upstream_tanks[i]))
+            end
         end
     end
-
     return(tanks_return)
 end
 
@@ -213,27 +216,27 @@ function get_field_of_tanks(tanks::Vector{Tank}, field::Symbol)
 end
 
 ## ---------------------------------
-## Returns all 'field's of the 'level' parents of 'tank'
+## Returns all 'field's of the 'level' upstream_tanks of 'tank'
 ## !! argument 'field' must be type 'Symbol', i.e. get_field_of_tanks(tanks, :V_max)
-## Just a wrapper for get_field_of_tanks(get_parent_tanks(tanks, level), :field)
+## Just a wrapper for get_field_of_tanks(get_upstream_tanks(tanks, level), :field)
 
-function get_field_of_parent_tanks(tank::Tank, level::Integer, field::Symbol)
+function get_field_of_upstream_tanks(tank::Tank, level::Integer, field::Symbol)
 
     level>=0 ? nothing : error("A negative 'level' is not allowed!")
 
-    get_field_of_tanks(get_parent_tanks(tank, level), field)
+    get_field_of_tanks(get_upstream_tanks(tank, level), field)
 
 end
 
 
 ## ---------------------------------
-## Returns all 'field's of all(grand)parents of 'tank'
+## Returns all 'field's of all upstream_tanks of 'tank'
 ## !! argument 'field' must be type 'Symbol', i.e. get_field_of_tanks(tanks, :V_max)
-## Just a wrapper for get_field_of_tanks(get_parent_tanks(tanks), :field)
+## Just a wrapper for get_field_of_tanks(get_upstream_tanks(tanks), :field)
 
-function get_field_of_parent_tanks(tank::Tank, field::Symbol)
+function get_field_of_upstream_tanks(tank::Tank, field::Symbol)
 
-    get_field_of_tanks(get_parent_tanks(tank), field)
+    get_field_of_tanks(get_upstream_tanks(tank), field)
 
 end
 

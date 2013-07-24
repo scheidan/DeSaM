@@ -6,7 +6,7 @@
 ## File: run.jl
 ## Path: c:/Users/scheidan/Dropbox/Eawag/DeSaM2/
 ##
-## July 23, 2013 -- Andreas Scheidegger
+## July 24, 2013 -- Andreas Scheidegger
 ##
 ## andreas.scheidegger@eawag.ch
 ## =======================================================
@@ -38,11 +38,11 @@ srand(111)
 
 ## --- tanks A ---
 
-## Volume:        10 liters
-## parents:       -
-## collection:    -
-## source:        household_source; 10 people, 1.5 liter/day/person median
-## initial costs: 100.00 
+## Volume:         10 liters
+## upstream_tanks: -
+## collection:     -
+## source:         household_source; 10 people, 1.5 liter/day/person median
+## initial costs:  100.00 
 
 tanks_A = [Tank(10, def_household_source(10, 1.5), 100.00) for i=1:6]
 ## creats a vector of 6 similar tanks
@@ -50,27 +50,27 @@ tanks_A = [Tank(10, def_household_source(10, 1.5), 100.00) for i=1:6]
 
 ## --- tank B ---
 
-## Volume:        50 liters
-## parents:       tanks_A
-## collection:    random collection;  max 5 tanks or max 20L, every 2nd day
-## source:        household_source; 10 people, 1.5 liter/day/person median
-## initial costs: 250.00 (tank) + 100.00 (collection)
+## Volume:         50 liters
+## upstream_tanks: tanks_A
+## collection:     random collection;  max 5 tanks or max 20L, every 2nd day
+## source:         household_source; 10 people, 1.5 liter/day/person median
+## initial costs:  250.00 (tank) + 100.00 (collection)
 
 tank_B = Tank(50,
               tanks_A,
               def_random_collection(5, 20, 2),
               def_household_source(10, 1.5),
               250.00+100.00)
-show(tank_B)
+## show(tank_B)
 
 
 ## --- tanks C ---
 
-## Volume:        20 liters
-## parents:       -
-## collection:    -
-## source:        household_source; 15 people, 1.5 liter/day/person median
-## initial costs: 150.00 each
+## Volume:         20 liters
+## upstream_tanks: -
+## collection:     -
+## source:         household_source; 15 people, 1.5 liter/day/person median
+## initial costs:  150.00 each
 
 tanks_C = [Tank(20, def_household_source(15, 1.5), 150.00) for i=1:4]
 ## creats a vector of 4 similar tanks
@@ -78,17 +78,17 @@ tanks_C = [Tank(20, def_household_source(15, 1.5), 150.00) for i=1:4]
 
 ## --- tank D ---
 
-## Volume:        150 liters,
-## parents:       [tank_B, tanks_C]
-## collection:    random collection;  max 5 tanks or max 200L, every 3nd day
-## source:        -
-## initial costs: 500.00 (tank) + 200.00 (collection)
+## Volume:         150 liters,
+## upstream_tanks: [tank_B, tanks_C]
+## collection:     random collection;  max 5 tanks or max 200L, every 3nd day
+## source:         -
+## initial costs:  500.00 (tank) + 200.00 (collection)
 
 tank_D = Tank(150,
               [tank_B, tanks_C],
               def_random_collection(5, 200, 3),
               500.00 + 200.00)
-show(tank_D)
+## show(tank_D)
 
 
 
@@ -109,17 +109,17 @@ t_sim_max = 10*365                      # simulate 10 years
 t1 = time()
 for t in 1:t_sim_max
 
-    ## update last tank only
+    ## update last tank only!
     update(tank_D)          
     
     ## write results in a vector
-    push!(costs_tank_D, tank_D.costs) # costs, only of tank D (no costs of parent tanks)
+    push!(costs_tank_D, tank_D.costs) # costs, only of tank D (no costs of upstream tanks)
 
 
     ## -- three ways to obtain the same fields
     ## V_overflow = sum(get_field_of_tanks(tanks_A, :V)) # sum of all overflows of tanks A
-    ## V_overflow = sum(get_field_of_parent_tanks(tank_B, 0, :V)) # sum of all overflows of tanks A
-    V_overflow = sum(get_field_of_parent_tanks(tank_D, 1, :V)) # sum of all overflows of tanks A
+    ## V_overflow = sum(get_field_of_upstream_tanks(tank_B, 0, :V)) # sum of all overflows of tanks A
+    V_overflow = sum(get_field_of_upstream_tanks(tank_D, 1, :V)) # sum of all overflows of tanks A
     
     push!(V_overflow_tanks_A, V_overflow) 
 
@@ -138,3 +138,14 @@ println("Average volume of all tanks A: ", mean(V_overflow_tanks_A))
 writecsv("output/output.csv", [costs_tank_D V_overflow_tanks_A])
 
 ## -------------------------------------------------------
+
+
+## println(n_upstream_tanks_level(tank_D))
+
+## println(n_upstream_tanks_level(tanks_A[1]))
+
+## draw(tank_D, 30)
+
+
+## println("========================")
+## plot(tank_D)
