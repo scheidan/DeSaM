@@ -102,7 +102,7 @@ end
 ## ---------------------------------
 ## function to update tanks
 
-function update(tank::Tank)
+function update(tank::Tank, update_costs::Bool)
 
     tank.time += 1
 
@@ -111,7 +111,7 @@ function update(tank::Tank)
     ## update all upstream tanks and then collect
     if tank.has_upstream_tanks
         for k in 1:size(tank.upstream_tanks,1)
-            update(tank.upstream_tanks[k])
+            update(tank.upstream_tanks[k], update_costs)
         end
 
         ## call collection function
@@ -131,11 +131,12 @@ function update(tank::Tank)
     tank.V = min(tank.V, tank.V_max)
 
     ## update costs
-    tank.costs = tank.costs + costs_coll + costs_source
-
-
+    if update_costs
+        tank.costs = tank.costs + costs_coll + costs_source
+    end
 end
 
+update(tank::Tank) = update(tank, true)
 
 ## ---------------------------------
 ## function to show() a Tank object
