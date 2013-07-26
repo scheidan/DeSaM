@@ -101,7 +101,7 @@ extended easily by the user.
 
 A DeSaM simulation consist only of interacting \texttt{Tank}
 objects. The tanks are arranged in a tree like structure. A tank can
-be filled either directly by a source (e.g.\ a household) or by
+be filled either directly by a source (e.g.\ a ) or by
 collecting from upstream tanks.
 
 
@@ -176,6 +176,40 @@ collection functions.  In most cases the user will provide these
 functions. However, some basic functions are implemented that can be
 modified or used directly. 
 
+\paragraph{Warning!} Defining a tank with \texttt{Tank()} creats \emph{single} instance. This
+instance must not be used twice in a network! For example, this code would lead
+to very unexpected results:
+{\small
+\begin{verbatim}
+tank_A = Tank(10, def_simple_source(10, 1.5), 100.00)
+tank_B = Tank(50,
+              [tank_A, tank_A],    # !!! tank_A is used twice !!!
+              def_simple_collection(5, 20),
+              100.00)
+\end{verbatim}
+}
+Several instances with the same specification are created with \href{http://docs.julialang.org/en/release-0.1/manual/arrays/#comprehensions}{comprehension}:
+{\small
+\begin{verbatim}
+tanks_A = [Tank(10, def_simple_source(10, 1.5), 100.00) for i=1:2)
+tank_B = Tank(50,
+              tanks_A,    
+              def_simple_collection(5, 20),
+              100.00)
+\end{verbatim}
+}
+Alternatively, a new instance can be created with \texttt{deepcopy()}:
+{\small
+\begin{verbatim}
+tank_A1 = Tank(10, def_simple_source(10, 1.5), 100.00)
+tank_A2 = deepcopy(tank_A1)     # creats a new instance
+tank_B = Tank(50,
+              [tank_A1, tank_A2],    
+              def_simple_collection(5, 20),
+              100.00)
+\end{verbatim}
+}
+
 
 \subsubsection{source function}
 The source function can be any function that takes as argument
@@ -186,7 +220,7 @@ A very simple source function is:
 {\small 
 \begin{verbatim}
 function simple_source(time)
-    ## produced volume of all household members
+    ## produced volume of all  members
     V = rand()*10 # U(0, 10)
     ## costs
     costs = 0.1*V
@@ -245,7 +279,7 @@ end
 
 Typically, on is interested how some state variables evolve over
 time. A more realistic example where every day the total overflow
-volume of the household tanks is stored (the function \texttt{push!(A, e)} adds
+volume of the  tanks is stored (the function \texttt{push!(A, e)} adds
 element \texttt{e} to the end of array \texttt{A}): {\small
 \begin{verbatim}
 ## define an empty vector to store results
@@ -293,10 +327,10 @@ The first step is the definition of all tanks.
 ## Volume:         10 liters
 ## upstream_tanks: -
 ## collection:     -
-## source:         household_source; 10 people, 1.5 liter/day/person median
+## source:         V_max 10 litre/day
 ## initial costs:  100.00 
 
-tanks_A = [Tank(10, def_household_source(10, 1.5), 100.00) for i=1:6]
+tanks_A = [Tank(10, def_simple_source(10), 100.00) for i=1:6]
 ## creats a vector of 6 similar tanks
 
 
@@ -304,14 +338,14 @@ tanks_A = [Tank(10, def_household_source(10, 1.5), 100.00) for i=1:6]
 
 ## Volume:         50 liters
 ## upstream_tanks: tanks_A
-## collection:     random collection;  max 5 tanks or max 20L, every 2nd day
-## source:         household_source; 10 people, 1.5 liter/day/person median
+## collection:     max 5 tanks or max 20L
+## source:         V_max 10 litre/day
 ## initial costs:  250.00 (tank) + 100.00 (collection)
 
 tank_B = Tank(50,
               tanks_A,
-              def_random_collection(5, 20, 2),
-              def_household_source(10, 1.5),
+              def_simple_collection(5, 20),
+              def_simple_source(10),
               250.00+100.00)
 show(tank_B)
 
@@ -321,10 +355,10 @@ show(tank_B)
 ## Volume:         20 liters
 ## upstream_tanks: -
 ## collection:     -
-## source:         household_source; 15 people, 1.5 liter/day/person median
+## source:         V_max 15 litre/day
 ## initial costs:  150.00 each
 
-tanks_C = [Tank(20, def_household_source(15, 1.5), 150.00) for i=1:4]
+tanks_C = [Tank(20, def_simple_source(15), 150.00) for i=1:4]
 ## creats a vector of 4 similar tanks
 
 
@@ -332,20 +366,20 @@ tanks_C = [Tank(20, def_household_source(15, 1.5), 150.00) for i=1:4]
 
 ## Volume:         150 liters,
 ## upstream_tanks: [tank_B, tanks_C]
-## collection:     random collection;  max 5 tanks or max 200L, every 3nd day
+## collection:     max 5 tanks or max 200L
 ## source:         -
 ## initial costs:  500.00 (tank) + 200.00 (collection)
 
 tank_D = Tank(150,
               [tank_B, tanks_C],
-              def_random_collection(5, 200, 3),
+              def_simple_collection(5, 200),
               500.00 + 200.00)
 show(tank_D)
 \end{verbatim}
 }
 
-Here the functions \texttt{def\_random\_collection()} and
-\texttt{def\_household\_source()} are used to define conveniently
+Here the functions \texttt{def\_simple\_collection()} and
+\texttt{def\_simple\_source()} are used to define conveniently
 different source ans collection function, i.e.\ are these functions
 that return a function. \texttt{show()} prints a summary of 
 properties of tank.
@@ -432,7 +466,8 @@ not apply to the \textsl{R} version):
   depend only on the tanks to empty and the time.
 \item Multiple substances could be implemented, however, different
   collecting routes (i.e. different tree structures) for different substances are not possible
-\item Only tree like systems can be simulated. Also distribution is not
+\item Only tree like systems can be simulated\footnote{Untested: is
+    should be possible that one tank is emptied by several collections.}. Also distribution is not
   possible, i.e. transport volume from one tank to several
   downstream tanks.
 \end{itemize}

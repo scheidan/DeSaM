@@ -26,16 +26,15 @@ srand(111)
 ## 1) Define tanks
 ## -------------------------------------------------------
 
-
 ## --- tanks A ---
 
 ## Volume:         10 liters
 ## upstream_tanks: -
 ## collection:     -
-## source:         household_source; 10 people, 1.5 liter/day/person median
+## source:         V_max 10 litre/day
 ## initial costs:  100.00 
 
-tanks_A = [Tank(10, def_household_source(10, 1.5), 100.00) for i=1:6]
+tanks_A = [Tank(10, def_simple_source(10), 100.00) for i=1:6]
 ## creats a vector of 6 similar tanks
 
 
@@ -43,14 +42,14 @@ tanks_A = [Tank(10, def_household_source(10, 1.5), 100.00) for i=1:6]
 
 ## Volume:         50 liters
 ## upstream_tanks: tanks_A
-## collection:     random collection;  max 5 tanks or max 20L, every 2nd day
-## source:         household_source; 10 people, 1.5 liter/day/person median
+## collection:     max 5 tanks or max 20L
+## source:         V_max 10 litre/day
 ## initial costs:  250.00 (tank) + 100.00 (collection)
 
 tank_B = Tank(50,
               tanks_A,
-              def_random_collection(5, 20, 2),
-              def_household_source(10, 1.5),
+              def_simple_collection(5, 20),
+              def_simple_source(10),
               250.00+100.00)
 show(tank_B)
 
@@ -60,10 +59,10 @@ show(tank_B)
 ## Volume:         20 liters
 ## upstream_tanks: -
 ## collection:     -
-## source:         household_source; 15 people, 1.5 liter/day/person median
+## source:         V_max 15 litre/day
 ## initial costs:  150.00 each
 
-tanks_C = [Tank(20, def_household_source(15, 1.5), 150.00) for i=1:4]
+tanks_C = [Tank(20, def_simple_source(15), 150.00) for i=1:4]
 ## creats a vector of 4 similar tanks
 
 
@@ -71,13 +70,13 @@ tanks_C = [Tank(20, def_household_source(15, 1.5), 150.00) for i=1:4]
 
 ## Volume:         150 liters,
 ## upstream_tanks: [tank_B, tanks_C]
-## collection:     random collection;  max 5 tanks or max 200L, every 3nd day
+## collection:     max 5 tanks or max 200L
 ## source:         -
 ## initial costs:  500.00 (tank) + 200.00 (collection)
 
 tank_D = Tank(150,
               [tank_B, tanks_C],
-              def_random_collection(5, 200, 3),
+              def_simple_collection(5, 200),
               500.00 + 200.00)
 show(tank_D)
 
@@ -97,6 +96,8 @@ costs_tank_D = Float64[]
 V_tanks_A = Float64[]
 
 t_sim_max = 10*365                      # simulate 10 years
+
+t1 = time()
 for t in 1:t_sim_max
 
     ## update last tank only
@@ -112,9 +113,11 @@ for t in 1:t_sim_max
     push!(costs_tank_D, tank_D.costs) # costs, only of tank D (no costs of parent tanks)
 
 end
+t1 = time()
 
 
 ## print results
+println("Simulation time [sec]: ", round(t2-t1, 2))
 println("Total costs after 10 years: ", total_costs(tank_D))
 println("Average costs of tank D: ", mean(costs_tank_D))
 println("Average volume off all tanks A: ", mean(V_tanks_A))
