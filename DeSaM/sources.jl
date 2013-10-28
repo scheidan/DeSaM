@@ -11,8 +11,6 @@
 ## andreas.scheidegger@eawag.ch
 ## =======================================================
 
-## should not be necessary if packages are installed properly:
-include(joinpath("Distributions", "Distributions.jl"))
 
 using Distributions
 
