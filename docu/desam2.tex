@@ -260,6 +260,43 @@ end
 \end{verbatim}
 }
 
+\subsection{!--not yet implemented--! loss function}
+
+Evaporation, leaks, thievery, \dots may lead to a loss of the stored
+volume. This can be modeled by a loss function. It takes the tank
+volume and time as arguments and must return the daily lost volume.
+
+A simple example with a daily loss of 10\%:
+{\small 
+\begin{verbatim}
+function simple_loss(V::Float64, time)
+    V_loss = 0.1 * V
+    return(V_loss)
+end
+\end{verbatim}
+}
+
+
+\subsection{!--not yet implemented--! failure function }
+
+Every tank will fail eventually in some way.\footnote{Failures in the
+  collections can be implemented easily in the collection function.}
+Depending on the type of failure, the consequences are different. For
+example, a large leak my cause the loss of all stored volume while a
+broken valve may prevent only that newly collected volume can be added
+to the tank. Also a failure may alter the behavior of the tank, e.g.\
+no collecting is is carried out as long the tank is broken but the
+cost for the collection still accumulate. Or maybe a broken tank can
+still be operated on a lower level, i.e.\ tank properties, such as
+\texttt{V\_max} change.
+
+Most likely a the broken tank is going to be repaired. The duration
+and the costs for the repair must be modeled considering the type of
+failure
+
+Because a failure could alter any aspect of a tank, it is not yet clear
+how and where to implement it elegantely in a general frame work.
+
 \subsection{Simulation}
 
 After defining a network of tanks the simulation can be performed. This
@@ -462,8 +499,8 @@ there are some intrinsic limitations of the design (they may or may
 not apply to the \textsl{R} version):
 
 \begin{itemize}
-\item The collections cannot be organized ``globally'' because they
-  depend only on the tanks to empty and the time.
+\item The collections cannot be organized ``globally''. The collectoin
+  function can only consider informatoin of upstream tanks.
 \item Multiple substances could be implemented, however, different
   collecting routes (i.e. different tree structures) for different substances are not possible
 \item Only tree like systems can be simulated\footnote{Untested: is

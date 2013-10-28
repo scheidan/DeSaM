@@ -80,7 +80,7 @@ tank_D = Tank(150,
               500.00 + 200.00)
 show(tank_D)
 
-## plot the structure of the tanks
+## plot the structure of the network
 plot(tank_D)
 
 
@@ -96,6 +96,7 @@ costs_tank_D = Float64[]
 V_tanks_A = Float64[]
 
 t_sim_max = 10*365                      # simulate 10 years
+
 
 t1 = time()
 for t in 1:t_sim_max
@@ -113,7 +114,7 @@ for t in 1:t_sim_max
     push!(costs_tank_D, tank_D.costs) # costs, only of tank D (no costs of parent tanks)
 
 end
-t1 = time()
+t2 = time()
 
 
 ## print results
